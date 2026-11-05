@@ -58,7 +58,7 @@ function recolour(map: maplibregl.Map) {
 }
 
 // one live bus from the nta, as the recorder gives it to the map
-type Bus = { id: string; lat: number; lon: number; sentAt: number };
+type Bus = { id: string; route: string; lat: number; lon: number; sentAt: number };
 
 // shows my ride as a blue line, where i am now as a red dot, the nta's live buses of my route as amber dots
 // (faded when their position is old), and the official route line in grey under everything.
@@ -105,15 +105,16 @@ export default function RideMap({ path, buses, route }: { path: [number, number]
     });
     map.on("dragstart", () => setFollowing(false));
 
-    // tap an amber bus to see which bus it is and how old its position is
+    // tap an amber bus to see its route, which bus it is and how old its position is right now.
+    // the nta gives each bus a vehicle number (like 338), its not the route number on the front of the bus
     map.on("click", "nta", (e) => {
       const bus = e.features?.[0];
       if (!bus) return;
-      const age = bus.properties.age as number;
+      const age = Date.now() / 1000 - (bus.properties.sentAt as number);
       const text = age < 60 ? `${Math.round(age)} s old` : `${Math.round(age / 60)} min old`;
       new maplibregl.Popup({ closeButton: false, offset: 10 })
         .setLngLat(e.lngLat)
-        .setText(`Bus ${bus.properties.id} · position ${text}`)
+        .setText(`Route ${bus.properties.route} · vehicle ${bus.properties.id} · position ${text}`)
         .addTo(map);
     });
     map.on("mouseenter", "nta", () => (map.getCanvas().style.cursor = "pointer"));
@@ -162,7 +163,7 @@ export default function RideMap({ path, buses, route }: { path: [number, number]
       type: "FeatureCollection",
       features: buses.map((bus) => ({
         type: "Feature",
-        properties: { id: bus.id, age: Math.max(0, Date.now() / 1000 - bus.sentAt) },
+        properties: { id: bus.id, route: bus.route, sentAt: bus.sentAt, age: Math.max(0, Date.now() / 1000 - bus.sentAt) },
         geometry: { type: "Point", coordinates: [bus.lon, bus.lat] },
       })),
     });

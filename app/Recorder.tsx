@@ -26,7 +26,7 @@ const COLUMN_NAMES: Record<Column, string> = {
 const COLUMNS_KEY = "ghost-bus-columns"; // so the phone remembers which columns i picked
 
 // one live bus from the nta feed, the way my server sends it (see app/api/nta/route.ts)
-type NtaBus = { id: string; lat: number; lon: number; sentAt: number; direction: number | null };
+type NtaBus = { id: string; route: string; lat: number; lon: number; sentAt: number; direction: number | null };
 
 // everything is also kept in the phone's browser storage, so a reload in the middle of a ride loses nothing
 const KEY = "ghost-bus-ride";
@@ -98,7 +98,10 @@ export default function Recorder() {
     localStorage.setItem(KEY, JSON.stringify({ fixes, cloud, uploadTime, route, rideId, startedAt, recording }));
   }, [loaded, fixes, cloud, uploadTime, route, rideId, startedAt, recording]);
 
-  // while recording, ask my server for the live nta buses of my route, straight away and then once a minute
+  // while recording, ask my server for the live nta buses of my route, straight away and then every 15 s.
+  // my server still only goes to the nta once a minute, it gives back its saved copy until that copy is 60 s old.
+  // on my first real ride i asked every 60 s, but the saved copy was always just under 60 s old when i asked,
+  // so i got the old copy every second time and the buses only moved every 2 minutes
   useEffect(() => {
     if (!recording) return;
     async function askNta() {
@@ -113,7 +116,7 @@ export default function Recorder() {
       }
     }
     askNta();
-    const timer = setInterval(askNta, 60_000);
+    const timer = setInterval(askNta, 15_000);
     return () => clearInterval(timer);
   }, [recording, route]);
 

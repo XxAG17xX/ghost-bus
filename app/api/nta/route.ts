@@ -3,7 +3,7 @@ import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 
 // this file runs on vercel's server, not on the phone, so the nta key and the firebase server key stay secret.
-// the phone calls /api/nta?route=7A about once a minute while it's recording.
+// the phone calls /api/nta?route=7A every 15 s while it's recording, but this only goes to the nta once a minute.
 
 // firebase admin is the server version of firebase. it can write to the database without the phone rules
 if (getApps().length === 0) {
