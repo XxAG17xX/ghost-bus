@@ -5,14 +5,11 @@ import { FieldValue, getFirestore } from "firebase-admin/firestore";
 // this file runs on vercel's server, not on the phone, so the nta key and the firebase server key stay secret.
 // the phone calls /api/nta?route=7A every 15 s while it's recording, but this only goes to the nta once a minute.
 
-// firebase admin is the server version of firebase. it can write to the database without the phone rules
-if (getApps().length === 0) {
-  initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!)) });
-}
-const db = getFirestore();
-
 // the nta's live bus positions (GTFS-Realtime), as json
 const FEED = "https://api.nationaltransport.ie/gtfsr/v2/Vehicles?format=json";
+
+// my live site, which has both keys
+const LIVE = "https://ghost-bus-a3.vercel.app/api/nta";
 
 // one bus from the feed, the way i save it
 type Bus = {
@@ -31,6 +28,20 @@ export async function GET(request: NextRequest) {
   if (route === "") {
     return Response.json({ error: "say which route, like /api/nta?route=7A" }, { status: 400 });
   }
+
+  // no keys on this computer (like someone running my code from the zip), so i ask my live site instead, it has the keys.
+  // my keys never leave vercel, and only my live site ever calls the nta. on vercel the keys are always there,
+  // and the VERCEL check makes sure the live site can never end up asking itself
+  if (!process.env.NTA_KEY && !process.env.VERCEL) {
+    const live = await fetch(`${LIVE}?route=${encodeURIComponent(route)}`, { cache: "no-store" });
+    return Response.json(await live.json(), { status: live.status });
+  }
+
+  // firebase admin is the server version of firebase. it can write to the database without the phone rules
+  if (getApps().length === 0) {
+    initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!)) });
+  }
+  const db = getFirestore();
 
   // the nta only allows one call a minute, so if the feed was fetched less than 60 s ago, i reuse that one
   // shortcut: two phones asking at the exact same moment could both fetch, fine for a few riders, fix it with a transaction in A4
