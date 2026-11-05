@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  devIndicators: false, // the little next.js badge sat on top of my stop button
   turbopack: {
     rules: {
       "*.css": {

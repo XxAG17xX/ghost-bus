@@ -1,26 +1,149 @@
 @import "tailwindcss";
 
+/* the colours: a printed bus timetable by day, the amber stop board at night */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --paper: #fbfaf6;
+  --ink: #15171b;
+  --muted: #5a5d63;
+  --rule: #e2dfd5;
+  --route: #2438a8;
+  --signal: #c8372d;
+  --saved: #1d7a46;
+  --waiting: #9a6100;
+  --fresh: #fff4cc;
+  --figure: var(--ink);
+  --board: #0c0c0c;
+  --amber: #ffb000;
+  --amber-dim: #8a6200;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --map-land: #ece8dc;
+  --map-water: #a9c9dc;
+  --map-park: #c9ddb0;
+  --map-building: #ded9cb;
+  --map-road: #ffffff;
+  --map-label: #3b3e44;
+  --map-route-line: #9a968c; /* the official route line, grey under my blue trace */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --paper: #0c0c0c;
+    --ink: #f4f1e8;
+    --muted: #a8a396;
+    --rule: #2a2925;
+    --signal: #e5484d;
+    --saved: #3fb37f;
+    --waiting: #ffb000;
+    --fresh: #2b2100;
+    --figure: var(--amber);
+
+    --map-land: #151513;
+    --map-water: #13303f;
+    --map-park: #1b2a17;
+    --map-building: #1f1e1a;
+    --map-road: #2e2d28;
+    --map-label: #a8a396;
+    --map-route-line: #5c5a53; /* darker grey at night so it doesn't glow */
   }
 }
 
+/* so i can write classes like bg-paper, text-route, font-dot in tailwind */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-route: var(--route);
+  --color-signal: var(--signal);
+  --color-saved: var(--saved);
+  --color-waiting: var(--waiting);
+  --color-figure: var(--figure);
+  --color-board: var(--board);
+  --color-amber: var(--amber);
+  --color-amber-dim: var(--amber-dim);
+  --font-sans: var(--font-barlow);
+  --font-condensed: var(--font-barlow-condensed);
+  --font-dot: var(--font-doto);
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-barlow), sans-serif;
+  font-variant-numeric: tabular-nums; /* all numbers the same width, so the columns line up */
+}
+
+::selection {
+  background: var(--route);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 3px solid var(--route);
+  outline-offset: 2px;
+}
+
+input {
+  caret-color: var(--signal);
+}
+
+/* the cloud mark on every row: empty ring = waiting, filled = google has it, crossed out = failed */
+.mark {
+  position: relative;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+.mark[data-state="saved"] {
+  background: var(--ink);
+}
+.mark[data-state="failed"] {
+  border-color: var(--signal);
+}
+.mark[data-state="failed"]::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 3px;
+  height: 2px;
+  background: var(--signal);
+  transform: rotate(-35deg);
+}
+
+/* a new fix comes in highlighted and then fades into the table */
+@keyframes fresh {
+  from { background-color: var(--fresh); }
+  to { background-color: transparent; }
+}
+.fresh {
+  animation: fresh 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fresh {
+    animation: none;
+    background-color: var(--fresh);
+  }
+}
+
+/* the little box when you tap a bus, in the stop board's colours */
+.maplibregl-popup-content {
+  background: var(--board);
+  color: var(--amber);
+  font: 600 13px var(--font-barlow), sans-serif;
+  padding: 6px 9px;
+  border-radius: 0;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+}
+.maplibregl-popup-tip {
+  display: none;
+}
+
+.maplibregl-ctrl-attrib {
+  font: 500 10px var(--font-barlow), sans-serif;
 }

@@ -41,3 +41,15 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# the map's background worker, copied from node_modules when npm install runs
+/public/maplibre-gl-worker.mjs
+
+# design tool working files (the sketches, choice pages and review screenshots)
+/.impeccable/mocks/
+/.impeccable/questions/
+/.impeccable/review/
+
+# secrets, just in case one is ever copied in here (they live outside this folder)
+*service-account*.json
+nta_key*
