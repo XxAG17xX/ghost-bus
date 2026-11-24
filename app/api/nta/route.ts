@@ -69,7 +69,8 @@ export async function GET(request: NextRequest) {
     const routeId = v.trip?.route_id ?? "";
     vehicles.push({
       id: v.vehicle?.id ?? entity.id,
-      route: routeId.split(" ")[1] ?? "", // "1 7A c a" -> "7A"
+      // the nta changed its ids on 23 nov 2026 from "1 7A c a" to "1_7A_c_a", so i split on a space or an underscore
+      route: routeId.split(/[ _]/)[1] ?? "", // "1_7A_c_a" -> "7A"
       routeId: routeId,
       tripId: v.trip?.trip_id ?? "",
       direction: v.trip?.direction_id ?? null,
