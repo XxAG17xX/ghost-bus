@@ -6,11 +6,10 @@
 
 name: Collect the NTA feeds at rush hour
 
+# the schedule is off: on 24 nov github never started the 06:50 or 15:50 runs, so cron-job.org now calls
+# /api/collect every minute at rush hour instead. this stays as a backup i can start by hand.
 on:
-  schedule:
-    - cron: "50 6 * * *" # morning peak, about 07:00 to 10:00
-    - cron: "50 15 * * *" # evening peak, about 16:00 to 19:00
-  workflow_dispatch: # so i can also start it by hand for a test
+  workflow_dispatch:
     inputs:
       minutes:
         description: "How many minutes to collect"
