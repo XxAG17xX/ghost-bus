@@ -93,13 +93,11 @@ export default function ReplayPage() {
               <p className="join-what">Found by itself: the one bus that stayed within 60 m of my phone, copy after copy.</p>
               <ol className="findings">
                 <li>
-                  <span>1.</span>
                   <span>
                     The NTA&apos;s position was <b>{age ?? "…"} s</b> old.
                   </span>
                 </li>
                 <li>
-                  <span>2.</span>
                   <span>
                     It put my bus <b>{gap ?? "…"} m</b> from where I really was.
                   </span>
