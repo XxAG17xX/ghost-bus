@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { database, latestVehicles, saveTrips } from "../../nta";
+import { database, latestTrips, latestVehicles } from "../../nta";
 
 // the city-wide ghost audit. a github action calls this once a minute during the morning and evening
 // rush hour, so both nta feeds get saved even when nobody is riding with my app.
@@ -28,7 +28,9 @@ export async function GET(request: NextRequest) {
   }
   if (twoKeys || !even) {
     try {
-      result.trips = await saveTrips(db);
+      const { fresh, count } = await latestTrips(db);
+      result.trips = count;
+      result.tripsFresh = fresh; // false when a phone had already saved them less than a minute ago
     } catch (error) {
       result.tripsError = String(error); // a 429 here just means a phone used the key this minute, the next run catches up
     }

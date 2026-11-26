@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { Bus, database, latestVehicles } from "../../nta";
+import { Bus, database, latestTrips, latestVehicles } from "../../nta";
 
 // this file runs on vercel's server, not on the phone, so the nta key and the firebase server key stay secret.
 // the phone calls /api/nta?route=7A every 15 s while it's recording, but this only goes to the nta once a minute
@@ -23,7 +23,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { vehicles, fetchedAt } = await latestVehicles(database());
+    const db = database();
+    const { vehicles, fetchedAt } = await latestVehicles(db);
+    // while someone rides, the board predictions get saved every minute too (with my second key), not only at
+    // rush hour, so every ride can be checked against what the boards said. if this fails the ride still goes on
+    if (process.env.NTA_KEY_TRIPS) {
+      await latestTrips(db).catch((error) => console.error("trip updates not saved", error));
+    }
     return Response.json(answer(route, vehicles, fetchedAt));
   } catch (error) {
     return Response.json({ error: String(error) }, { status: 502 });

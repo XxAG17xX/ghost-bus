@@ -88,6 +88,7 @@ export const TRIP_COLUMNS = [
   "vehicleId", // "" when no bus is linked to the trip yet
   "stops", "skipped", // how many stops have a prediction, and how many of them are skipped
   "firstStop", "firstDelay", "lastDelay", // the next stop it predicts, and its delay in seconds there and at the last stop
+  "updates", // every prediction of the trip as "stop sequence:delay" joined by ";", like "54:4437;56:4510"
 ];
 
 // the predictions the boards show (TripUpdates). a ghost bus lives here: a trip that is still predicted
@@ -106,8 +107,8 @@ export async function saveTrips(db: Firestore) {
     const t = entity.trip_update;
     if (!t) continue;
     const stops = t.stop_time_update ?? [];
-    const delay = (u: { arrival?: { delay?: number }; departure?: { delay?: number } } | undefined) =>
-      u?.arrival?.delay ?? u?.departure?.delay ?? null;
+    type StopUpdate = { stop_sequence?: number; arrival?: { delay?: number }; departure?: { delay?: number } };
+    const delay = (u: StopUpdate | undefined) => u?.arrival?.delay ?? u?.departure?.delay ?? null;
     trips.push([
       t.trip?.trip_id ?? "",
       t.trip?.route_id ?? "",
@@ -122,6 +123,9 @@ export async function saveTrips(db: Firestore) {
       stops[0]?.stop_id ?? "",
       delay(stops[0]),
       delay(stops.at(-1)),
+      // the full list is what a board at any stop would show for this trip. the nta only sends a few stops per trip,
+      // and a delay carries on to the stops after it until the next one, so a stop's time = its timetable time + that delay
+      stops.map((u: StopUpdate) => `${u.stop_sequence ?? ""}:${delay(u) ?? ""}`).join(";"),
     ]);
   }
 
@@ -133,4 +137,15 @@ export async function saveTrips(db: Firestore) {
     trips: JSON.stringify(trips),
   });
   return trips.length;
+}
+
+// same idea as latestVehicles: the nta allows one call a minute per key, and now both the collector and
+// the phones (while someone is riding) save trip updates, so whoever comes second in a minute just skips it.
+// i only read the time of the newest copy (select), not the whole 300 KB document, to keep the downloads small
+export async function latestTrips(db: Firestore) {
+  const latest = await db.collection("trip_feed").orderBy("fetchedAt", "desc").limit(1).select("fetchedAt").get();
+  if (!latest.empty && Date.now() - latest.docs[0].data().fetchedAt.toMillis() < 60_000) {
+    return { fresh: false, count: null };
+  }
+  return { fresh: true, count: await saveTrips(db) };
 }
