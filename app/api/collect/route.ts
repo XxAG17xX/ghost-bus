@@ -11,11 +11,7 @@ export async function GET(request: NextRequest) {
   const db = database();
   const result: Record<string, unknown> = { at: new Date().toISOString() };
 
-  // storage (free plan is 1 GB): from 27 nov only the evening peak, and predictions every 2 min.
-  // irish time is utc in winter, so before 12 utc is the morning
-  if (new Date().getUTCHours() < 12) {
-    return Response.json({ ...result, skipped: "mornings are off to save storage" });
-  }
+  // firebase is on the blaze plan since 26 nov, so both rush hours and both feeds every minute again
   const twoKeys = Boolean(process.env.NTA_KEY_TRIPS);
   const even = new Date().getUTCMinutes() % 2 === 0;
 
@@ -28,7 +24,7 @@ export async function GET(request: NextRequest) {
       result.vehiclesError = String(error);
     }
   }
-  if (!even) { // predictions on odd minutes
+  if (twoKeys || !even) { // predictions every minute with 2 keys, odd minutes with 1
     try {
       const { fresh, count } = await latestTrips(db);
       result.trips = count;
