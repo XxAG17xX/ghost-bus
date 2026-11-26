@@ -298,3 +298,14 @@
     animation: none;
   }
 }
+
+/* the folder tab goes back to the cover */
+a.phone-tab {
+  color: var(--ink);
+  text-decoration: none;
+}
+a.phone-tab:hover,
+a.phone-tab:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

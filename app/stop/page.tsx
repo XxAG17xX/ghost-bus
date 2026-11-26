@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import "./stop.css";
 
-type Row = { tripId: string; startDate: string; route: string; to: string; due: number; vehicle: string | null; age: number | null; metres: number | null; flag: string };
+type Row = { passed: boolean; tripId: string; startDate: string; route: string; to: string; due: number; vehicle: string | null; age: number | null; metres: number | null; flag: string };
 type Board = { stop: { id: string; name: string; lat: number; lon: number }; tripsAt: number; rows: Row[] };
 type Verdict = { verdict: string; reason: string; witnesses: number };
 
@@ -127,7 +128,7 @@ export default function StopPage() {
   return (
     <main className="case-phone">
       <div className="phone-folder">
-        <p className="phone-tab">CASE GB-26 · AT THE STOP</p>
+        <Link href="/" className="phone-tab">CASE GB-26 · AT THE STOP</Link>
 
         {!stopId && (
           <>
@@ -208,6 +209,8 @@ function sessionId() {
 function check(row: Row) {
   if (row.flag === "cancelled") return "The NTA has cancelled this trip, but it's still listed.";
   if (row.flag === "no bus") return "No bus is running this trip right now.";
+  if (row.passed && row.flag === "frozen") return `Bus ${row.vehicle} was already past this stop ${Math.round(row.age! / 60)} min ago.`;
+  if (row.passed) return `Bus ${row.vehicle} already went past this stop.`;
   if (row.flag === "frozen") return `Bus ${row.vehicle}'s position is ${Math.round(row.age! / 60)} min old. It could be anywhere.`;
   if (row.vehicle) return `Bus ${row.vehicle} is ${away(row.metres!)} away, seen ${row.age} s ago.`;
   return "Hasn't started its trip yet.";

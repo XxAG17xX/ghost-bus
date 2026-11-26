@@ -68,7 +68,10 @@ export async function POST(request: NextRequest) {
   } else if (wentPast) {
     const latest = seen[seen.length - 1].bus;
     verdict = "came";
-    reason = `Bus ${latest.id} is already past this stop (seen at ${time(latest.sentAt)}).`;
+    const age = Math.round(now / 1000 - latest.sentAt);
+    reason = age > FROZEN_SECONDS
+      ? `Bus ${latest.id} was already past this stop at ${time(latest.sentAt)}, its last position.`
+      : `Bus ${latest.id} already went past this stop (seen at ${time(latest.sentAt)}).`;
   } else if (seen.length > 0) {
     const latest = seen[seen.length - 1];
     const age = Math.round(now / 1000 - latest.bus.sentAt);

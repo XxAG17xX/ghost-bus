@@ -69,7 +69,7 @@ export default function ReplayPage() {
   return (
     <main className="desk">
       <div className="folder">
-        <p className="tab tab-left">CASE GB-26 · EXHIBIT C · REPLAY OF A REAL RIDE</p>
+        <Link href="/" className="tab tab-left">CASE GB-26 · EXHIBIT C · REPLAY OF A REAL RIDE</Link>
         <p className="tab tab-right">{data ? `${new Date(data.start).toLocaleDateString("en-IE", { day: "numeric", month: "short" })} · ${clock(t)}` : "…"}</p>
         <h1 className="case-title">Route {data?.route ?? "…"}, on board</h1>
 
@@ -88,23 +88,37 @@ export default function ReplayPage() {
           {data && (
             <>
               <p className="finding-main">
-                My bus was <span className="marked">{data.myBus ?? "?"}</span>
+                My bus: <span className="marked">{data.myBus ?? "?"}</span>
               </p>
-              <p className="join-what">Found by itself: the one bus that stayed within 60 m of my phone, copy after copy.</p>
               <ol className="findings">
                 <li>
                   <span>
-                    The NTA&apos;s position was <b>{age ?? "…"} s</b> old.
+                    NTA position: <b>{age ?? "…"} s</b> old
                   </span>
                 </li>
                 <li>
                   <span>
-                    It put my bus <b>{gap ?? "…"} m</b> from where I really was.
+                    Gap: <b>{gap ?? "…"} m</b>
                   </span>
                 </li>
               </ol>
+              {t >= data.end && <p className="replay-end">End of the recorded ride.</p>}
+              {/* drag to any moment of the ride, like a video */}
+              <div className="scrub">
+                <span>{clock(data.start).slice(0, 5)}</span>
+                <input
+                  type="range"
+                  min={data.start}
+                  max={data.end}
+                  step={1000}
+                  value={t}
+                  onChange={(e) => setT(Number(e.target.value))}
+                  aria-label="Move through the ride"
+                />
+                <span>{clock(data.end).slice(0, 5)}</span>
+              </div>
               <div className="log replay-controls">
-                <button onClick={() => setPlaying(!playing)}>{playing ? "Pause" : t > data.start ? "Play on" : "Play"}</button>
+                <button onClick={() => { if (t >= data.end) setT(data.start); setPlaying(!playing); }}>{playing ? "Pause" : t >= data.end ? "Play again" : t > data.start ? "Play on" : "Play"}</button>
                 <button onClick={() => setSpeed(speed === 20 ? 60 : 20)}>{speed === 20 ? "Faster" : "Slower"}</button>
                 <button onClick={() => { setT(data.start); setPlaying(false); }}>Restart</button>
               </div>

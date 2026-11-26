@@ -100,7 +100,7 @@ export default function LivePage() {
   return (
     <main className="desk">
       <div className="folder">
-        <p className="tab tab-left">CASE GB-26 · DUBLIN BUS BOARDS · OPEN</p>
+        <Link href="/" className="tab tab-left">CASE GB-26 · DUBLIN BUS BOARDS · OPEN</Link>
         <p className="tab tab-right">
           <span className="live-dot" aria-hidden="true" /> LIVE {time(now, true)} · NTA FEED{" "}
           {feedAge ?? "…"} S OLD

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { FROZEN_SECONDS, metres, tripStart } from "../../analysis";
+import { FROZEN_SECONDS, metres, RouteFile, snap, tripStart } from "../../analysis";
 import { database, latestTrips, latestVehicles, newestTrips } from "../../nta";
 
 // /api/board?stop=<stop id>: what the real board at that stop would show, and what ghost bus thinks of each line.
@@ -72,7 +72,18 @@ export async function GET(request: NextRequest) {
     else if (!bus && started) flag = "no bus";
     else if (bus && fetchedAt / 1000 - bus.sentAt > FROZEN_SECONDS) flag = "frozen";
 
+    // did the bus already go past this stop? compare both along the bus's own route line
+    let passed = false;
+    if (bus) {
+      const line = (await file<RouteFile>(origin, `r/${encodeURIComponent(bus.routeId.replaceAll("/", "~").replaceAll(" ", "_"))}.json`))?.directions[String(bus.direction)]?.shape;
+      if (line) {
+        const stopOnLine = snap(line, stopLat, stopLon);
+        passed = stopOnLine.off < 100 && snap(line, bus.lat, bus.lon).along > stopOnLine.along + 50;
+      }
+    }
+
     rows.push({
+      passed: passed,
       tripId: trip.tripId,
       startDate: trip.startDate,
       route: trip.route,
