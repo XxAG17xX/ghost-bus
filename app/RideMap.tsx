@@ -8,15 +8,15 @@ import "maplibre-gl/dist/maplibre-gl.css";
 maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 
 // free openstreetmap map tiles, no key needed. i recolour them below so they match my page
-const STYLE = "https://tiles.openfreemap.org/styles/positron";
+export const STYLE = "https://tiles.openfreemap.org/styles/positron";
 
 // reads a colour from globals.css, so the map follows the page in light and dark mode
-function colour(name: string) {
+export function colour(name: string) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
 // paints the map in my own flat colours: land, water, parks, buildings, roads, labels
-function recolour(map: maplibregl.Map) {
+export function recolour(map: maplibregl.Map) {
   for (const layer of map.getStyle().layers) {
     const id = layer.id;
     try {

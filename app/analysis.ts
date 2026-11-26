@@ -1,4 +1,4 @@
-import type { Bus } from "./nta";
+import type { Bus, Trip } from "./nta";
 
 // the analysis (a4 task 1): my gps + the nta bus positions + the route lines from the timetable
 
@@ -149,4 +149,37 @@ export function busFlags(bus: Bus, fetchedAt: number, routeFile: RouteFile | nul
     flags.push("off route");
   }
   return flags;
+}
+
+// ---------- the whole city right now (for the live screen) ----------
+
+// dublin's buses: dublin bus ("1_...") and go-ahead ireland ("3_..."), old ids had a space instead of "_"
+export function isDublinRoute(routeId: string) {
+  return /^[13][ _]/.test(routeId);
+}
+
+// when a trip should have left (unix ms), from its start date and time. irish time is utc in winter
+export function tripStart(trip: Trip) {
+  const d = trip.startDate; // like "20261126"
+  const [h, m, s] = trip.startTime.split(":").map(Number); // can be over 24, like "25:10:00" after midnight
+  return Date.UTC(Number(d.slice(0, 4)), Number(d.slice(4, 6)) - 1, Number(d.slice(6, 8))) + ((h * 60 + m) * 60 + s) * 1000;
+}
+
+// a trip "should be running" 5 min after its start plus its own predicted delay,
+// and if no bus in the positions has that trip id, the board is showing a trip with no bus behind it
+export function checkCity(vehicles: Bus[], vehiclesAt: number, trips: Trip[], tripsAt: number) {
+  const dublinBuses = vehicles.filter((v) => isDublinRoute(v.routeId));
+  const frozen = dublinBuses.filter((v) => vehiclesAt / 1000 - v.sentAt > FROZEN_SECONDS);
+
+  const runningTrips = new Set(vehicles.map((v) => v.tripId));
+  let shouldBeRunning = 0;
+  const noBus: Trip[] = [];
+  for (const trip of trips) {
+    if (!isDublinRoute(trip.routeId) || trip.status === "CANCELED") continue;
+    const due = tripStart(trip) + Math.max(trip.firstDelay ?? 0, 0) * 1000 + 5 * 60_000;
+    if (tripsAt < due) continue; // not started yet
+    shouldBeRunning++;
+    if (!runningTrips.has(trip.tripId)) noBus.push(trip);
+  }
+  return { dublinBuses, frozen, shouldBeRunning, noBus };
 }

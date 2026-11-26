@@ -147,3 +147,22 @@ export async function latestTrips(db: Firestore) {
   }
   return { fresh: true, count: await saveTrips(db) };
 }
+
+// the newest saved copy of the trip updates, with each trip turned back into names (tripId, route, ...)
+export async function newestTrips(db: Firestore) {
+  const latest = await db.collection("trip_feed").orderBy("fetchedAt", "desc").limit(1).get();
+  if (latest.empty) return { fetchedAt: 0, trips: [] as Trip[] };
+  const saved = latest.docs[0].data();
+  const columns = saved.columns as string[];
+  const trips = (JSON.parse(saved.trips) as (string | number | null)[][]).map(
+    (row) => Object.fromEntries(columns.map((name, i) => [name, row[i]])) as Trip,
+  );
+  return { fetchedAt: saved.fetchedAt.toMillis() as number, trips: trips };
+}
+
+// one trip from the trip updates, with the names from TRIP_COLUMNS
+export type Trip = {
+  tripId: string; routeId: string; route: string; direction: number | null; startTime: string; startDate: string;
+  status: string; vehicleId: string; stops: number; skipped: number;
+  firstStop: string; firstDelay: number | null; lastDelay: number | null; updates?: string;
+};

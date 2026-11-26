@@ -47,6 +47,28 @@
   }
 }
 
+/* the live screen is always the night board, whatever the laptop is set to */
+:root[data-theme="dark"] {
+    --paper: #0c0c0c;
+    --ink: #f4f1e8;
+    --muted: #a8a396;
+    --rule: #2a2925;
+    --signal: #e5484d;
+    --saved: #3fb37f;
+    --waiting: #ffb000;
+    --fresh: #2b2100;
+    --figure: var(--amber);
+
+    --map-land: #151513;
+    --map-water: #13303f;
+    --map-park: #1b2a17;
+    --map-building: #1f1e1a;
+    --map-road: #2e2d28;
+    --map-label: #a8a396;
+    --map-route-line: #5c5a53; /* darker grey at night so it doesn't glow */
+  }
+
+
 /* so i can write classes like bg-paper, text-route, font-dot in tailwind */
 @theme inline {
   --color-paper: var(--paper);
