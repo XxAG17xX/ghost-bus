@@ -1,6 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import type { Frozen, Rider } from "./CityMap";
@@ -34,6 +36,7 @@ export default function LivePage() {
   const [qr, setQr] = useState("");
   const [joinLink, setJoinLink] = useState("");
   const newestReport = useRef<number | null>(null);
+  const router = useRouter();
 
   // ask my server every 20 s (it only calls the nta once a minute).
   // when a new verdict comes in, the sheet jumps to the verdicts by itself
@@ -65,10 +68,13 @@ export default function LivePage() {
   // keys 1, 2, 3 switch the sheet, so i don't need the mouse during the demo
   useEffect(() => {
     const keys: Record<string, Scene> = { "1": "findings", "2": "join", "3": "verdicts" };
-    const onKey = (e: KeyboardEvent) => keys[e.key] && setScene(keys[e.key]);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "4") router.push("/replay"); // the replay of my real ride
+      else if (keys[e.key]) setScene(keys[e.key]);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [router]);
 
   // the clock and the feed age tick every second
   useEffect(() => {
@@ -212,6 +218,7 @@ export default function LivePage() {
                 {i + 1} {name}
               </button>
             ))}
+            <Link href="/replay">4 replay</Link>
           </p>
         </div>
       </div>

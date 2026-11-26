@@ -373,3 +373,29 @@
     animation: none;
   }
 }
+
+/* replay buttons, typed labels like the rest of the file */
+.replay-controls {
+  display: flex;
+  gap: 0.8vw;
+}
+.replay-controls button,
+.scene-tabs a {
+  font-family: var(--font-typed), monospace;
+  font-weight: 700;
+  font-size: 2vh;
+  padding: 1vh 1.2vw;
+  border: 2px solid var(--ink);
+  border-radius: 0.5vh;
+  cursor: pointer;
+  color: var(--ink);
+  text-decoration: none;
+}
+.replay-controls button:first-child {
+  background: var(--ink);
+  color: var(--paper);
+}
+.scene-tabs a {
+  font-size: 1.6vh;
+  padding: 0.5vh 0.8vw;
+}

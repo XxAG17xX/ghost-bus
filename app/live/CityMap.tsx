@@ -14,11 +14,11 @@ export type Rider = { lat: number; lon: number; mode: string };
 const RING = `<svg class="red-ring" viewBox="0 0 44 44"><path d="M8 18 C9 7, 33 3, 38 17 C42 30, 25 41, 13 36 C4 32, 3 22, 11 12" /></svg>`;
 
 // the map looks like a paper print: light paper, ink roads, ink labels
-function paperColours(map: maplibregl.Map) {
+export function paperColours(map: maplibregl.Map) {
   for (const layer of map.getStyle().layers) {
     const id = layer.id;
     try {
-      if (id.startsWith("poi") || id.includes("housenum")) map.removeLayer(id);
+      if (id.startsWith("poi") || id.includes("housenum") || id.includes("shield")) map.removeLayer(id); // road numbers clutter the print
       else if (layer.type === "background") map.setPaintProperty(id, "background-color", "#f1ead8");
       else if (layer.type === "fill" && id.includes("water")) map.setPaintProperty(id, "fill-color", "#d9dedb");
       else if (layer.type === "fill") map.setPaintProperty(id, "fill-color", "#ebe3cf");
