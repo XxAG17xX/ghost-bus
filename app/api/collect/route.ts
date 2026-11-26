@@ -11,12 +11,15 @@ export async function GET(request: NextRequest) {
   const db = database();
   const result: Record<string, unknown> = { at: new Date().toISOString() };
 
-  // with one key the two feeds take turns (vehicles on even minutes, trip updates on odd ones),
-  // because the nta allows one call a minute per key. with a second key both run every minute
+  // storage (free plan is 1 GB): from 27 nov only the evening peak, and predictions every 2 min.
+  // irish time is utc in winter, so before 12 utc is the morning
+  if (new Date().getUTCHours() < 12) {
+    return Response.json({ ...result, skipped: "mornings are off to save storage" });
+  }
   const twoKeys = Boolean(process.env.NTA_KEY_TRIPS);
   const even = new Date().getUTCMinutes() % 2 === 0;
 
-  if (twoKeys || even) {
+  if (twoKeys || even) { // vehicles every minute with 2 keys, even minutes with 1
     try {
       const { vehicles, fresh } = await latestVehicles(db);
       result.vehicles = vehicles.length;
@@ -25,7 +28,7 @@ export async function GET(request: NextRequest) {
       result.vehiclesError = String(error);
     }
   }
-  if (twoKeys || !even) {
+  if (!even) { // predictions on odd minutes
     try {
       const { fresh, count } = await latestTrips(db);
       result.trips = count;
