@@ -88,7 +88,7 @@ export const TRIP_COLUMNS = [
   "vehicleId", // "" when no bus is linked to the trip yet
   "stops", "skipped", // how many stops have a prediction, and how many of them are skipped
   "firstStop", "firstDelay", "lastDelay", // the next stop it predicts, and its delay in seconds there and at the last stop
-  "updates", // every prediction of the trip as "stop sequence:delay" joined by ";", like "54:4437;56:4510"
+  "updates", // every stop prediction, like "54:4437;56:4510" (stop sequence:delay)
 ];
 
 // the predictions the boards show (TripUpdates). a ghost bus lives here: a trip that is still predicted
@@ -123,8 +123,7 @@ export async function saveTrips(db: Firestore) {
       stops[0]?.stop_id ?? "",
       delay(stops[0]),
       delay(stops.at(-1)),
-      // the full list is what a board at any stop would show for this trip. the nta only sends a few stops per trip,
-      // and a delay carries on to the stops after it until the next one, so a stop's time = its timetable time + that delay
+      // board time at a stop = timetable time + the delay of the last update before it
       stops.map((u: StopUpdate) => `${u.stop_sequence ?? ""}:${delay(u) ?? ""}`).join(";"),
     ]);
   }
@@ -139,9 +138,8 @@ export async function saveTrips(db: Firestore) {
   return trips.length;
 }
 
-// same idea as latestVehicles: the nta allows one call a minute per key, and now both the collector and
-// the phones (while someone is riding) save trip updates, so whoever comes second in a minute just skips it.
-// i only read the time of the newest copy (select), not the whole 300 KB document, to keep the downloads small
+// like latestVehicles: one call a minute per key, so skip if saved under 60 s ago.
+// select() only reads the time, not the whole 300 KB document
 export async function latestTrips(db: Firestore) {
   const latest = await db.collection("trip_feed").orderBy("fetchedAt", "desc").limit(1).select("fetchedAt").get();
   if (!latest.empty && Date.now() - latest.docs[0].data().fetchedAt.toMillis() < 60_000) {

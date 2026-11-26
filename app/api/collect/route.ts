@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { database, latestTrips, latestVehicles } from "../../nta";
 
-// the city-wide ghost audit. a github action calls this once a minute during the morning and evening
-// rush hour, so both nta feeds get saved even when nobody is riding with my app.
-// it needs a secret token, so random people can't make my server call the nta.
+// the city-wide ghost audit: cron-job.org calls this once a minute at rush hour,
+// so both feeds get saved even when nobody rides. needs my secret token
 
 export async function GET(request: NextRequest) {
   if (!process.env.COLLECT_TOKEN || request.headers.get("authorization") !== `Bearer ${process.env.COLLECT_TOKEN}`) {
@@ -30,7 +29,7 @@ export async function GET(request: NextRequest) {
     try {
       const { fresh, count } = await latestTrips(db);
       result.trips = count;
-      result.tripsFresh = fresh; // false when a phone had already saved them less than a minute ago
+      result.tripsFresh = fresh; // false if a phone saved them this minute
     } catch (error) {
       result.tripsError = String(error); // a 429 here just means a phone used the key this minute, the next run catches up
     }

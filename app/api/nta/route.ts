@@ -25,8 +25,7 @@ export async function GET(request: NextRequest) {
   try {
     const db = database();
     const { vehicles, fetchedAt } = await latestVehicles(db);
-    // while someone rides, the board predictions get saved every minute too (with my second key), not only at
-    // rush hour, so every ride can be checked against what the boards said. if this fails the ride still goes on
+    // also save the board predictions while someone rides (key 2), not only at rush hour
     if (process.env.NTA_KEY_TRIPS) {
       await latestTrips(db).catch((error) => console.error("trip updates not saved", error));
     }
