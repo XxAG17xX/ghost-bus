@@ -254,3 +254,122 @@
     stroke-dashoffset: 0;
   }
 }
+
+/* the source line and the three sheet tabs */
+.source {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2vw;
+}
+.scene-tabs {
+  display: flex;
+  gap: 0.5vw;
+}
+.scene-tabs button {
+  font-family: var(--font-typed), monospace;
+  font-size: 1.6vh;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.5vh 0.8vw;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 0.4vh;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.scene-tabs button.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.scene-tabs button:focus-visible {
+  outline: 3px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+/* sheet page 2: join by qr */
+.join-what {
+  font-size: 2.3vh;
+  line-height: 1.4;
+  margin: 1.2vh 0 2vh;
+  color: var(--ink-soft);
+}
+.qr {
+  width: 30vh;
+  height: 30vh;
+}
+.qr svg {
+  width: 100%;
+  height: 100%;
+}
+.join-link {
+  font-size: 1.9vh;
+  margin-top: 1.2vh;
+  font-weight: 700;
+  word-break: break-all;
+}
+.join-count {
+  font-size: 2.6vh;
+  margin-top: 2vh;
+}
+.join-count b {
+  font-size: 4vh;
+  color: var(--stamp);
+}
+
+/* sheet page 3: the verdicts, newest first */
+.verdict-entry {
+  padding: 1.2vh 0;
+  border-bottom: 1px dashed #b9b09b;
+}
+.verdict-stamp-live {
+  display: inline-block;
+  font-family: var(--font-case), sans-serif;
+  font-size: 2.6vh;
+  letter-spacing: 0.04em;
+  border: 0.4vh solid currentColor;
+  border-radius: 0.5vh;
+  padding: 0.2vh 0.8vw;
+  transform: rotate(-3deg);
+  mix-blend-mode: multiply;
+}
+.verdict-entry:first-child .verdict-stamp-live {
+  font-size: 3.6vh;
+  animation: stamp-down 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.verdict-stamp-live.ghost {
+  color: var(--stamp);
+}
+.verdict-stamp-live.came {
+  color: #2f6b3a;
+}
+.verdict-stamp-live.late,
+.verdict-stamp-live.unclear {
+  color: var(--ink-soft);
+}
+.verdict-what {
+  font-size: 2.1vh;
+  margin-top: 0.8vh;
+}
+.verdict-why {
+  font-size: 1.9vh;
+  color: var(--ink-soft);
+  margin-top: 0.4vh;
+  line-height: 1.35;
+}
+@keyframes stamp-down {
+  from {
+    transform: rotate(-3deg) scale(1.6);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-3deg) scale(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .verdict-entry:first-child .verdict-stamp-live {
+    animation: none;
+  }
+}

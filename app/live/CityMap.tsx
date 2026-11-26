@@ -102,7 +102,8 @@ export default function CityMap({ buses, frozen, riders }: { buses: [number, num
 
     // exhibit tags on the three oldest positions
     for (const tag of tags.current) tag.remove();
-    const oldest = [...frozen].sort((a, b) => b.age - a.age).slice(0, 3);
+    const view = map.getBounds(); // only buses you can actually see on the map get a tag
+    const oldest = frozen.filter((f) => view.contains([f.lon, f.lat])).sort((a, b) => b.age - a.age).slice(0, 3);
     tags.current = oldest.map((bus) => {
       const element = document.createElement("div");
       element.className = "exhibit-tag";

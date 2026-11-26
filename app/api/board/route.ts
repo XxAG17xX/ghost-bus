@@ -61,7 +61,8 @@ export async function GET(request: NextRequest) {
 
     const midnight = tripStart({ ...trip, startTime: "00:00:00" });
     const due = midnight + entry[1][index] * 1000 + delay * 1000;
-    if (due < now - 60_000 || due > now + 60 * 60_000) continue; // only the next hour, like a real board
+    // the next hour like a real board, plus the last 10 minutes so people can say "it didn't come"
+    if (due < now - 10 * 60_000 || due > now + 60 * 60_000) continue;
 
     // is there a real bus behind this line?
     const bus = vehicles.find((v) => v.tripId === trip.tripId);
@@ -72,6 +73,8 @@ export async function GET(request: NextRequest) {
     else if (bus && fetchedAt / 1000 - bus.sentAt > FROZEN_SECONDS) flag = "frozen";
 
     rows.push({
+      tripId: trip.tripId,
+      startDate: trip.startDate,
       route: trip.route,
       to: stops[pattern[pattern.length - 1][1]]?.[0] ?? "",
       due: due,

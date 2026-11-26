@@ -169,3 +169,30 @@ input {
 .maplibregl-ctrl-attrib {
   font: 500 10px var(--font-barlow), sans-serif;
 }
+
+/* assignment 4: the case file look for the riding page (set on <html> by app/ride/page.tsx).
+   it wins over the light and dark colours above, and the map reads these too */
+:root.case-world {
+  --paper: #f4eedf;
+  --ink: #1c1a17;
+  --muted: #5d564a;
+  --rule: #d9cfb8;
+  --route: #1c1a17;
+  --signal: #b3312a;
+  --saved: #2f6b3a;
+  --waiting: #8a5a00;
+  --fresh: #efe3c0;
+  --figure: var(--ink);
+  --board: #0c0c0c;
+  --amber: #ffb000;
+  --amber-dim: #8a6200;
+  --map-land: #f1ead8;
+  --map-water: #d9dedb;
+  --map-park: #e3dcc4;
+  --map-building: #e6dcc6;
+  --map-road: #fbf7ec;
+  --map-label: #5a5246;
+  --map-route-line: #b9ae95;
+  --font-barlow: var(--font-typed);
+  --font-barlow-condensed: var(--font-case);
+}

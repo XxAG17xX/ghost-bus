@@ -18,7 +18,15 @@ export async function GET() {
     const recent = await db.collection("live_riders").where("at", ">", Date.now() - 3 * 60_000).get();
     const riders = recent.docs.map((d) => ({ lat: d.data().lat, lon: d.data().lon, mode: d.data().mode }));
 
+    // the latest verdicts from "it didn't come" (the extra task), newest first
+    const latestReports = await db.collection("reports").orderBy("at", "desc").limit(5).get();
+    const reports = latestReports.docs.map((d) => {
+      const r = d.data();
+      return { route: r.route, stopName: r.stopName, verdict: r.verdict, reason: r.reason, witnesses: r.witnesses, at: r.at, demo: r.demo };
+    });
+
     return Response.json({
+      reports: reports,
       vehiclesAt: fetchedAt,
       tripsAt: tripsAt,
       buses: city.dublinBuses.map((v) => [v.lon, v.lat]), // just the dots

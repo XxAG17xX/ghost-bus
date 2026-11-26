@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { waitForPendingWrites } from "firebase/firestore";
 import { db } from "./firebase";
 import { saveFix, startRide } from "./cloud";
@@ -47,6 +48,9 @@ export default function Recorder() {
   const [loaded, setLoaded] = useState(false);
   const [ntaBuses, setNtaBuses] = useState<NtaBus[] | null>(null); // null = not asked yet
   const [ntaError, setNtaError] = useState(false);
+  const [myBus, setMyBus] = useState<NtaBus | null>(null); // the nta bus i'm on, once the app has worked it out
+  const together = useRef<Record<string, number>>({}); // bus id -> how many of its positions were right next to me
+  const counted = useRef<Record<string, number>>({}); // bus id -> the last sentAt i counted, so a position counts once
   const watchId = useRef<number | null>(null);
   const ridePromise = useRef<Promise<string> | null>(null); // the ride id, once the ride exists
 
@@ -120,6 +124,55 @@ export default function Recorder() {
     return () => clearInterval(timer);
   }, [recording, route]);
 
+  // which bus am i on? every time new nta positions come, a bus that was within 60 m of where i was
+  // at the moment it sent its position gets a point. after 2 points the bus with the most is my bus.
+  // a bus going the other way can pass me once, but it can't stay next to me
+  useEffect(() => {
+    if (!ntaBuses || fixes.length === 0) return;
+    for (const bus of ntaBuses) {
+      if (counted.current[bus.id] === bus.sentAt) continue;
+      counted.current[bus.id] = bus.sentAt;
+      let closest: Fix | null = null;
+      for (const f of fixes) {
+        if (!closest || Math.abs(Date.parse(f.time) / 1000 - bus.sentAt) < Math.abs(Date.parse(closest.time) / 1000 - bus.sentAt)) closest = f;
+      }
+      if (closest && Math.abs(Date.parse(closest.time) / 1000 - bus.sentAt) <= 5 && metres(closest.lat, closest.lon, bus.lat, bus.lon) < 60) {
+        together.current[bus.id] = (together.current[bus.id] ?? 0) + 1;
+      }
+    }
+    let best: string | null = null;
+    for (const id in together.current) {
+      if (best === null || together.current[id] > together.current[best]) best = id;
+    }
+    const mine = best && together.current[best] >= 2 ? ntaBuses.find((b) => b.id === best) : undefined;
+    if (mine) setMyBus(mine);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ntaBuses]);
+
+  // while recording, once a minute: "a rider is here", so the projector shows riders.
+  // the last fix is already going to the cloud for the ride, this just adds it to the live count
+  const lastFix = useRef<Fix | undefined>(undefined);
+  lastFix.current = fixes.at(-1);
+  useEffect(() => {
+    if (!recording) return;
+    let id = sessionStorage.getItem("ghost-bus-id");
+    if (!id) {
+      id = Math.random().toString(36).slice(2);
+      sessionStorage.setItem("ghost-bus-id", id);
+    }
+    const say = () => {
+      const f = lastFix.current;
+      if (!f) return;
+      fetch("/api/here", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, lat: f.lat, lon: f.lon, mode: "bus" }) }).catch(() => {});
+    };
+    const first = setTimeout(say, 5_000);
+    const timer = setInterval(say, 60_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [recording]);
+
   // the elapsed clock only ticks while recording
   useEffect(() => {
     if (!recording) return;
@@ -165,6 +218,9 @@ export default function Recorder() {
     } else {
       ridePromise.current = startRide(route);
       setStartedAt(new Date().toISOString());
+      setMyBus(null);
+      together.current = {};
+      counted.current = {};
     }
     ridePromise.current.then(
       (id) => setRideId(id),
@@ -246,7 +302,13 @@ export default function Recorder() {
   if (!ntaError && ntaBuses !== null && ntaBuses.length === 0) board = { text: "NO LIVE BUSES RIGHT NOW", bright: false, count: "" };
   if (!ntaError && ntaBuses !== null && ntaBuses.length > 0) {
     const count = `${ntaBuses.length} LIVE`;
-    if (last) {
+    const mine = myBus ? ntaBuses.find((b) => b.id === myBus.id) : undefined;
+    if (last && mine) {
+      // once i know my bus, the board only talks about my bus, never a bus going the other way
+      const away = metres(last.lat, last.lon, mine.lat, mine.lon);
+      const age = Math.max(0, now / 1000 - mine.sentAt);
+      board = { text: `MY BUS ${mine.id} · ${shortDistance(away)} · ${shortAge(age)} OLD`, bright: true, count: count };
+    } else if (last) {
       // find the bus closest to me
       let nearest = ntaBuses[0];
       for (const bus of ntaBuses) {
@@ -254,7 +316,7 @@ export default function Recorder() {
       }
       const away = metres(last.lat, last.lon, nearest.lat, nearest.lon);
       const age = Math.max(0, now / 1000 - nearest.sentAt); // seconds since that bus sent its position
-      board = { text: `${shortDistance(away)} AWAY · ${shortAge(age)} OLD`, bright: true, count: count };
+      board = { text: `NEAREST ${shortDistance(away)} · ${shortAge(age)} OLD`, bright: true, count: count };
     } else {
       board = { text: "LIVE ON THE NTA FEED", bright: true, count: count };
     }
@@ -291,6 +353,12 @@ export default function Recorder() {
   return (
     // on a phone it's one column. on a wide screen the map goes on the left and the rest on the right
     <div className="flex min-h-dvh flex-col bg-paper pb-28 text-ink lg:grid lg:h-dvh lg:grid-cols-[minmax(0,1fr)_480px] lg:grid-rows-[auto_auto_auto_auto_minmax(0,1fr)_auto] lg:pb-0">
+      {/* the tab of the case file */}
+      <p className="flex justify-between bg-[#221d18] px-4 pb-1 pt-2 text-[12px] font-bold tracking-[0.08em] text-[#d6bb82] lg:col-start-2">
+        <Link href="/" className="underline underline-offset-2">CASE GB-26</Link>
+        <span>ON THE BUS</span>
+      </p>
+
       {/* the route band at the top, like on a timetable */}
       <header className="grid grid-cols-[auto_1fr_auto] items-center gap-3 bg-route px-4 py-3 text-white lg:col-start-2">
         <input
@@ -340,7 +408,7 @@ export default function Recorder() {
 
       {/* the map */}
       <div className="h-60 border-b-2 border-ink lg:col-start-1 lg:row-[1/-1] lg:h-auto lg:border-b-0 lg:border-r-2">
-        <RideMap path={path} buses={ntaBuses ?? []} route={route} />
+        <RideMap path={path} buses={ntaBuses ?? []} route={route} myBus={myBus?.id ?? null} myDirection={myBus?.direction ?? null} />
       </div>
 
       {/* the timetable: the last 8 fixes, newest on top. before the first ride it says what gets shared */}

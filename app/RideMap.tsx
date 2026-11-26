@@ -27,6 +27,8 @@ export function recolour(map: maplibregl.Map) {
       } else if (id === "me") {
         map.setPaintProperty(id, "circle-color", colour("--signal"));
         map.setPaintProperty(id, "circle-stroke-color", colour("--paper"));
+      } else if (id === "mybus") {
+        map.setPaintProperty(id, "circle-stroke-color", colour("--ink"));
       } else if (id === "official") {
         map.setPaintProperty(id, "line-color", colour("--map-route-line"));
       } else if (id === "nta") {
@@ -58,12 +60,14 @@ export function recolour(map: maplibregl.Map) {
 }
 
 // one live bus from the nta, as the recorder gives it to the map
-type Bus = { id: string; route: string; lat: number; lon: number; sentAt: number };
+type Bus = { id: string; route: string; lat: number; lon: number; sentAt: number; direction: number | null };
 
 // shows my ride as a blue line, where i am now as a red dot, the nta's live buses of my route as amber dots
 // (faded when their position is old), and the official route line in grey under everything.
 // path is a list of [lon, lat], oldest first
-export default function RideMap({ path, buses, route }: { path: [number, number][]; buses: Bus[]; route: string }) {
+// myBus is the bus i'm on (once the recorder has worked it out): it gets a ring drawn above my own dot,
+// and buses going the other way fade out
+export default function RideMap({ path, buses, route, myBus = null, myDirection = null }: { path: [number, number][]; buses: Bus[]; route: string; myBus?: string | null; myDirection?: number | null }) {
   const box = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [ready, setReady] = useState(false);
@@ -95,11 +99,20 @@ export default function RideMap({ path, buses, route }: { path: [number, number]
           "circle-radius": 7,
           "circle-stroke-width": 2,
           // older positions fade out: full under 2 minutes, half up to 10 minutes, faint after that
-          "circle-opacity": ["step", ["get", "age"], 1, 120, 0.5, 600, 0.25],
-          "circle-stroke-opacity": ["step", ["get", "age"], 1, 120, 0.5, 600, 0.25],
+          // going the other way: faint
+          "circle-opacity": ["case", ["==", ["get", "away"], 1], 0.2, ["step", ["get", "age"], 1, 120, 0.5, 600, 0.25]],
+          "circle-stroke-opacity": ["case", ["==", ["get", "away"], 1], 0.2, ["step", ["get", "age"], 1, 120, 0.5, 600, 0.25]],
         },
       });
       map.addLayer({ id: "me", type: "circle", source: "me", paint: { "circle-radius": 8, "circle-stroke-width": 3 } });
+      // my bus: an empty ring on top of everything, so it never hides under my own dot
+      map.addLayer({
+        id: "mybus",
+        type: "circle",
+        source: "nta",
+        filter: ["==", ["get", "mine"], 1],
+        paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-width": 3 },
+      });
       recolour(map);
       setReady(true);
     });
@@ -163,11 +176,18 @@ export default function RideMap({ path, buses, route }: { path: [number, number]
       type: "FeatureCollection",
       features: buses.map((bus) => ({
         type: "Feature",
-        properties: { id: bus.id, route: bus.route, sentAt: bus.sentAt, age: Math.max(0, Date.now() / 1000 - bus.sentAt) },
+        properties: {
+          id: bus.id,
+          route: bus.route,
+          sentAt: bus.sentAt,
+          age: Math.max(0, Date.now() / 1000 - bus.sentAt),
+          mine: bus.id === myBus ? 1 : 0,
+          away: myDirection !== null && bus.direction !== null && bus.direction !== myDirection ? 1 : 0,
+        },
         geometry: { type: "Point", coordinates: [bus.lon, bus.lat] },
       })),
     });
-  }, [buses, ready]);
+  }, [buses, ready, myBus, myDirection]);
 
   // the official line of my route, from the tfi timetable. only the 7A file exists for now (public/routes/7A.json)
   useEffect(() => {

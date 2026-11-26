@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
 import type { Frozen, Rider } from "./CityMap";
 import "./case.css";
 
@@ -17,22 +18,56 @@ type Live = {
   noBus: number;
   noBusExamples: { route: string; start: string; delay: number | null }[];
   riders: Rider[];
+  reports: { route: string; stopName: string; verdict: string; reason: string; witnesses: number; at: number; demo: boolean }[];
 };
+
+// the right-hand sheet has three pages, switched with the tabs or the keys 1, 2, 3 during the demo
+type Scene = "findings" | "join" | "verdicts";
+const STAMPS: Record<string, string> = { ghost: "VERIFIED GHOST", came: "BUS CAME", late: "LATE, NOT A GHOST", unclear: "UNCLEAR" };
+const DEMO_STOP = "8220DB000404"; // nassau street, next to trinity, for the classroom
 
 // the projector screen for the demo: dublin's buses as an open case file, live from the nta
 export default function LivePage() {
   const [live, setLive] = useState<Live | null>(null);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  const [scene, setScene] = useState<Scene>("findings");
+  const [qr, setQr] = useState("");
+  const [joinLink, setJoinLink] = useState("");
+  const newestReport = useRef<number | null>(null);
 
-  // ask my server every 20 s (it only calls the nta once a minute)
+  // ask my server every 20 s (it only calls the nta once a minute).
+  // when a new verdict comes in, the sheet jumps to the verdicts by itself
   useEffect(() => {
     async function ask() {
       const response = await fetch("/api/live");
-      if (response.ok) setLive(await response.json());
+      if (!response.ok) return;
+      const data: Live = await response.json();
+      const newest = data.reports[0]?.at ?? 0;
+      if (newestReport.current !== null && newest > newestReport.current) setScene("verdicts");
+      newestReport.current = newest;
+      setLive(data);
     }
     ask();
     const timer = setInterval(ask, 20_000);
     return () => clearInterval(timer);
+  }, []);
+
+  // the qr code sends classmates to the demo stop on their phones (?stop=... can change it)
+  useEffect(() => {
+    const stop = new URLSearchParams(window.location.search).get("stop") ?? DEMO_STOP;
+    const link = `${window.location.origin}/stop?stop=${stop}&demo=1`;
+    QRCode.toString(link, { type: "svg", margin: 0, color: { dark: "#1c1a17", light: "#f4eedf" } }).then((svg) => {
+      setQr(svg);
+      setJoinLink(link.replace(/^https?:\/\//, ""));
+    });
+  }, []);
+
+  // keys 1, 2, 3 switch the sheet, so i don't need the mouse during the demo
+  useEffect(() => {
+    const keys: Record<string, Scene> = { "1": "findings", "2": "join", "3": "verdicts" };
+    const onKey = (e: KeyboardEvent) => keys[e.key] && setScene(keys[e.key]);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   // the clock and the feed age tick every second
@@ -93,7 +128,33 @@ export default function LivePage() {
               Opening the case: asking the NTA for every bus in Dublin…
             </p>
           )}
-          {live && (
+          {live && scene === "join" && (
+            <div className="join">
+              <p className="finding-main">Be a witness.</p>
+              <p className="join-what">Scan this. Your phone shows the board at the stop, and what is really behind each line.</p>
+              <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
+              <p className="join-link">{joinLink}</p>
+              <p className="join-count">
+                <b>{riders}</b> witnesses connected
+              </p>
+            </div>
+          )}
+          {live && scene === "verdicts" && (
+            <div className="verdicts">
+              {live.reports.length === 0 && <p className="join-what">No reports yet. Press &quot;It didn&apos;t come&quot; on a line that&apos;s overdue.</p>}
+              {live.reports.map((r, i) => (
+                <div key={i} className="verdict-entry">
+                  <p className={`verdict-stamp-live ${r.verdict}`}>{STAMPS[r.verdict]}</p>
+                  <p className="verdict-what">
+                    <b>{r.route}</b> at {r.stopName} · {time(r.at)}
+                    {r.witnesses > 1 && ` · ${r.witnesses} witnesses`}
+                  </p>
+                  <p className="verdict-why">{r.reason}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {live && scene === "findings" && (
             <>
               <p className="finding-main">
                 <span className="marked">
@@ -143,9 +204,16 @@ export default function LivePage() {
           )}
         </section>
 
-        <p className="source">
-          Source: NTA GTFS-Realtime vehicle positions and trip updates (CC BY 4.0, provided as is).
-        </p>
+        <div className="source">
+          <p>Source: NTA GTFS-Realtime vehicle positions and trip updates (CC BY 4.0, provided as is).</p>
+          <p className="scene-tabs">
+            {(["findings", "join", "verdicts"] as Scene[]).map((name, i) => (
+              <button key={name} onClick={() => setScene(name)} className={scene === name ? "on" : ""}>
+                {i + 1} {name}
+              </button>
+            ))}
+          </p>
+        </div>
       </div>
     </main>
   );
@@ -156,17 +224,13 @@ export default function LivePage() {
 function useTyped(text: string) {
   const [shown, setShown] = useState(text);
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setShown(text);
-      return;
-    }
-    let letters = 0;
-    setShown("");
+    const quick = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let letters = quick ? text.length - 1 : 0;
     const timer = setInterval(() => {
       letters++;
       setShown(text.slice(0, letters));
       if (letters >= text.length) clearInterval(timer);
-    }, 90);
+    }, quick ? 0 : 90);
     return () => clearInterval(timer);
   }, [text]);
   return shown;
