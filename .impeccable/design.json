@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T00:00:00Z",
+  "title": "Design System: Ghost Bus",
+  "extensions": {
+    "colorMeta": {
+      "desk": { "role": "neutral", "displayName": "Walnut Desk", "canonical": "#221d18", "tonalRamp": ["#0f0c0a", "#1a1612", "#221d18", "#3a3229", "#564c40", "#7a6e5f", "#a89c8b", "#d8cfc2"] },
+      "manila": { "role": "neutral", "displayName": "Manila", "canonical": "#d6bb82", "tonalRamp": ["#3d3016", "#5e4b25", "#86703f", "#b99c62", "#d6bb82", "#e3cfa3", "#efe2c6", "#f8f1e3"] },
+      "manila-edge": { "role": "neutral", "displayName": "Manila Edge", "canonical": "#b99c62", "tonalRamp": ["#3d3016", "#5e4b25", "#86703f", "#b99c62", "#cbb27f", "#ddc9a1", "#ecdfc4", "#f8f1e3"] },
+      "paper": { "role": "neutral", "displayName": "Typed Paper", "canonical": "#f4eedf", "tonalRamp": ["#3a352b", "#5d564a", "#8a8170", "#b9b09b", "#d9cfb8", "#e9e0cb", "#f4eedf", "#fbf8f0"] },
+      "ink": { "role": "neutral", "displayName": "Typewriter Ink", "canonical": "#1c1a17", "tonalRamp": ["#0d0c0a", "#1c1a17", "#2f2c27", "#4a443b", "#6b6458", "#938b7d", "#bfb8aa", "#e6e1d6"] },
+      "ink-soft": { "role": "neutral", "displayName": "Faded Ink", "canonical": "#4a443b", "tonalRamp": ["#1c1a17", "#2f2c27", "#4a443b", "#5d564a", "#7a7264", "#9c9485", "#c2bbac", "#e6e1d6"] },
+      "stamp-red": { "role": "primary", "displayName": "Rubber-Stamp Red", "canonical": "#b3312a", "tonalRamp": ["#3d0f0c", "#5e1814", "#86231d", "#b3312a", "#cc5a4f", "#de8a80", "#edbab3", "#f8e4e1"] },
+      "ok-green": { "role": "secondary", "displayName": "Cleared Green", "canonical": "#2f6b3a", "tonalRamp": ["#0e2412", "#173a1d", "#22522a", "#2f6b3a", "#4d8b57", "#7bad83", "#b0d0b5", "#e2efe4"] },
+      "witness-blue": { "role": "secondary", "displayName": "Witness Blue", "canonical": "#2438a8", "tonalRamp": ["#0b1240", "#131d66", "#1c2b8a", "#2438a8", "#4a5ec4", "#7f8ed8", "#b6bfea", "#e3e7f8"] },
+      "board-black": { "role": "tertiary", "displayName": "Board Black", "canonical": "#0c0c0c", "tonalRamp": ["#000000", "#0c0c0c", "#1a1a1a", "#262626", "#3d3d3d", "#5c5c5c", "#8a8a8a", "#c2c2c2"] },
+      "board-amber": { "role": "tertiary", "displayName": "Board Amber", "canonical": "#ffb000", "tonalRamp": ["#3d2a00", "#5e4100", "#8a6200", "#c48b00", "#ffb000", "#ffc84d", "#ffdf99", "#fff4d9"] },
+      "board-bezel": { "role": "tertiary", "displayName": "Board Bezel", "canonical": "#262626" },
+      "dashed-rule": { "role": "neutral", "displayName": "Dashed Rule", "canonical": "#b9b09b" },
+      "map-paper": { "role": "neutral", "displayName": "Map Print Paper", "canonical": "#f1ead8" },
+      "map-water": { "role": "neutral", "displayName": "Map Print Water", "canonical": "#d9dedb" },
+      "map-label": { "role": "neutral", "displayName": "Map Print Label", "canonical": "#5a5246" },
+      "paperclip-steel": { "role": "neutral", "displayName": "Paperclip Steel", "canonical": "#8f8f8f" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Case Title", "purpose": "The case title, once per surface, uppercase. 6.4vh on the projector." },
+      "headline": { "displayName": "Stop Name", "purpose": "The stop name on the phone stop screen, uppercase." },
+      "title": { "displayName": "Index Entry", "purpose": "Cover index entry titles, uppercase." },
+      "stamp": { "displayName": "Stamp", "purpose": "Rubber stamps only (UNVERIFIED, VERIFIED GHOST, BUS CAME, LATE, UNCLEAR)." },
+      "body": { "displayName": "Typed Body", "purpose": "Ledes, findings and running text; max 46ch on phones. Findings are 2.4vh and the main finding 3.6vh bold on the projector." },
+      "body-small": { "displayName": "Typed Small", "purpose": "Check strips, small print, captions." },
+      "label": { "displayName": "Tab Label", "purpose": "Folder tab text and scene switches, uppercase, tracked." },
+      "board": { "displayName": "Board Dot Matrix", "purpose": "The official stop board lines only, amber on black." }
+    },
+    "shadows": [
+      { "name": "folder-on-desk", "value": "0 12px 30px rgb(0 0 0 / 0.45)", "purpose": "The manila folder on the desk (projector: 0 1.5vh 4vh)." },
+      { "name": "paper-on-folder", "value": "0 6px 16px rgb(0 0 0 / 0.25)", "purpose": "Exhibit prints, case sheets, cover index (projector: 0 0.6vh 1.6vh rgb(0 0 0 / 0.28))." },
+      { "name": "tag-on-print", "value": "0 0.3vh 0.8vh rgb(0 0 0 / 0.2)", "purpose": "Exhibit tags on the map." },
+      { "name": "board-bezel", "value": "inset 0 0 0 3px #262626", "purpose": "The stop board panel." }
+    ],
+    "motion": [
+      { "name": "ease-settle", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Shared ease for the marker ring and the stamp." },
+      { "name": "draw-ring", "value": "stroke-dashoffset 120 to 0, 0.9s ease-settle", "purpose": "A newly frozen bus gets its red marker ring drawn by hand. No drawing on first load." },
+      { "name": "stamp-down", "value": "scale 1.25 to 1 and opacity 0 to 1, 0.35s ease-settle, rotation held", "purpose": "The newest verdict stamp comes down onto the paper." },
+      { "name": "retype", "value": "90ms per character", "purpose": "A live number that changes is retyped from its first character." },
+      { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce", "purpose": "Rings appear drawn, stamps appear in place, numbers appear whole." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "below 1024px: single-column folder, px sizing, 48px targets" },
+      { "name": "cover-max", "value": "560px folder width on the cover" },
+      { "name": "lg", "value": "1024px: /ride map moves to a left column" },
+      { "name": "projector", "value": "fixed 100vh desk, all sizes in vh/vw" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Folder with tab",
+      "kind": "card",
+      "refersTo": "folder",
+      "description": "The manila folder on the walnut desk, with the case reference on its tab.",
+      "html": "<div class=\"ds-desk\"><div class=\"ds-folder\"><p class=\"ds-tab\">CASE GB-26 · AT THE STOP</p><h1 class=\"ds-stop-name\">Nassau Street</h1><p class=\"ds-meta\">Stop 404 · checked at 14:02</p></div></div>",
+      "css": ".ds-desk { background: #221d18; padding: 44px 12px 24px; font-family: 'Courier Prime', 'Courier New', monospace; color: #1c1a17; } .ds-folder { position: relative; background: #d6bb82; border-radius: 0 8px 8px 8px; padding: 18px 14px 20px; box-shadow: 0 12px 30px rgb(0 0 0 / 0.45); } .ds-tab { position: absolute; top: -30px; left: 0; height: 32px; margin: 0; padding: 7px 14px 0; background: #d6bb82; border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; } .ds-stop-name { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 30px; line-height: 1.05; text-transform: uppercase; margin: 0; } .ds-meta { font-size: 14px; color: #4a443b; margin: 6px 0 0; }"
+    },
+    {
+      "name": "Filled ink button",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "Primary phone action, a typed label on ink card.",
+      "html": "<button class=\"ds-btn-ink\">Find my stop</button>",
+      "css": ".ds-btn-ink { display: block; width: 100%; min-height: 48px; background: #1c1a17; color: #f4eedf; font-family: 'Courier Prime', monospace; font-size: 17px; font-weight: 700; border: none; border-radius: 6px; padding: 12px; cursor: pointer; transition: background 0.15s; } .ds-btn-ink:hover { background: #2f2c27; } .ds-btn-ink:focus-visible { outline: 3px solid #b3312a; outline-offset: 3px; } .ds-btn-ink:disabled { opacity: 0.6; cursor: wait; }"
+    },
+    {
+      "name": "Outlined ink button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action, such as reporting a bus that didn't come.",
+      "html": "<button class=\"ds-btn-outline\">It didn't come</button>",
+      "css": ".ds-btn-outline { min-height: 44px; padding: 8px 14px; background: none; border: 2px solid #1c1a17; color: #1c1a17; border-radius: 6px; font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; cursor: pointer; } .ds-btn-outline:hover { background: rgb(28 26 23 / 0.06); } .ds-btn-outline:focus-visible { outline: 3px solid #1c1a17; outline-offset: 2px; } .ds-btn-outline:disabled { opacity: 0.6; cursor: wait; }"
+    },
+    {
+      "name": "Stop choice row",
+      "kind": "input",
+      "refersTo": "choice-row",
+      "description": "A paper row for picking a nearby stop, name left and distance right.",
+      "html": "<button class=\"ds-choice\"><span>Nassau Street</span><span>120 m</span></button>",
+      "css": ".ds-choice { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 48px; background: #f4eedf; border: 1.5px solid #1c1a17; border-radius: 6px; padding: 10px 12px; font-family: 'Courier Prime', monospace; font-size: 16px; color: #1c1a17; text-align: left; cursor: pointer; } .ds-choice span:last-child { color: #4a443b; margin-left: 10px; white-space: nowrap; } .ds-choice:focus-visible { outline: 3px solid #b3312a; outline-offset: 3px; }"
+    },
+    {
+      "name": "Amber board line with check strip",
+      "kind": "custom",
+      "refersTo": "board-line",
+      "description": "The official board line as it really looks, with ghost bus's typed check underneath.",
+      "html": "<div><p class=\"ds-board\"><span>39A</span><span class=\"ds-to\">UCD Belfield</span><span>Due</span></p><div class=\"ds-check ds-bad\">No bus is running this trip right now.</div><p class=\"ds-board\"><span>15</span><span class=\"ds-to\">Ballycullen Rd</span><span>6 min</span></p><div class=\"ds-check ds-ok\">Bus 33012 is 1.4 km away, seen 22 s ago.</div></div>",
+      "css": ".ds-board { display: grid; grid-template-columns: 3.4ch 1fr auto; gap: 8px; margin: 0; background: #0c0c0c; border-radius: 6px; padding: 8px 10px; box-shadow: inset 0 0 0 3px #262626; font-family: 'Doto', monospace; font-weight: 900; font-size: 20px; line-height: 1.5; color: #ffb000; white-space: nowrap; } .ds-to { overflow: hidden; text-overflow: ellipsis; } .ds-check { background: #f4eedf; margin: 0 0 10px; padding: 6px 10px 8px; border-radius: 0 0 6px 6px; font-family: 'Courier Prime', monospace; font-size: 14px; line-height: 1.35; color: #1c1a17; } .ds-ok { color: #2f6b3a; } .ds-bad { color: #b3312a; font-weight: 700; }"
+    },
+    {
+      "name": "Rubber stamp",
+      "kind": "chip",
+      "refersTo": "stamp",
+      "description": "Verdict stamps, coloured by verdict, coming down onto the paper.",
+      "html": "<div class=\"ds-paper\"><p class=\"ds-stamp ds-ghost\">VERIFIED GHOST</p><p class=\"ds-stamp ds-came\">BUS CAME</p><p class=\"ds-stamp ds-late\">LATE, NOT A GHOST</p></div>",
+      "css": ".ds-paper { background: #f4eedf; padding: 12px 16px; } .ds-stamp { display: inline-block; margin: 4px 12px 8px 0; font-family: 'Archivo Black', sans-serif; font-size: 19px; letter-spacing: 0.04em; border: 4px solid currentColor; border-radius: 6px; padding: 2px 10px; transform: rotate(-4deg); transform-origin: left center; mix-blend-mode: multiply; animation: ds-stamp-down 0.35s cubic-bezier(0.16, 1, 0.3, 1); } .ds-ghost { color: #b3312a; } .ds-came { color: #2f6b3a; } .ds-late { color: #4a443b; } @keyframes ds-stamp-down { from { transform: rotate(-4deg) scale(1.25); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } } @media (prefers-reduced-motion: reduce) { .ds-stamp { animation: none; } }"
+    },
+    {
+      "name": "Exhibit tag with leader line",
+      "kind": "custom",
+      "refersTo": "exhibit-tag",
+      "description": "A typed label tied to a frozen bus on the map print by an ink leader line.",
+      "html": "<div class=\"ds-print\"><div class=\"ds-tagrow\"><svg class=\"ds-ring\" viewBox=\"0 0 44 44\"><path d=\"M8 18 C9 7, 33 3, 38 17 C42 30, 25 41, 13 36 C4 32, 3 22, 11 12\"/></svg><i class=\"ds-leader\"></i><span class=\"ds-tag\">39A · 14 MIN OLD</span></div></div>",
+      "css": ".ds-print { background: #f1ead8; padding: 24px; } .ds-tagrow { display: flex; align-items: center; gap: 6px; } .ds-ring { width: 26px; height: 26px; overflow: visible; } .ds-ring path { fill: none; stroke: #b3312a; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 120; stroke-dashoffset: 120; animation: ds-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .ds-leader { display: block; width: 40px; height: 2px; background: #1c1a17; } .ds-tag { background: #f4eedf; border: 1.5px solid #1c1a17; border-radius: 4px; padding: 3px 8px; font-family: 'Courier Prime', monospace; font-size: 13px; font-weight: 700; white-space: nowrap; box-shadow: 0 3px 8px rgb(0 0 0 / 0.2); } @keyframes ds-draw { to { stroke-dashoffset: 0; } } @media (prefers-reduced-motion: reduce) { .ds-ring path { animation: none; stroke-dashoffset: 0; } }"
+    },
+    {
+      "name": "Cover index",
+      "kind": "nav",
+      "refersTo": "paper-sheet",
+      "description": "The file's table of contents: typed entries on paper, each wholly a link.",
+      "html": "<nav class=\"ds-index\"><a class=\"ds-entry\" href=\"#\"><span class=\"ds-entry-title\">I'm at a stop</span><span class=\"ds-entry-what\">Check what the board says against what's really coming.</span></a><a class=\"ds-entry\" href=\"#\"><span class=\"ds-entry-title\">I'm on a bus</span><span class=\"ds-entry-what\">Record the ride. Your phone shows where the bus really is.</span></a></nav>",
+      "css": ".ds-index { background: #f4eedf; border-radius: 6px; box-shadow: 0 6px 16px rgb(0 0 0 / 0.25); padding: 4px 16px; } .ds-entry { display: block; padding: 16px 0; border-bottom: 1px dashed #b9b09b; color: #1c1a17; text-decoration: none; } .ds-entry:last-child { border-bottom: none; } .ds-entry-title { display: block; font-family: 'Archivo Black', sans-serif; font-size: 24px; text-transform: uppercase; } .ds-entry-what { display: block; font-family: 'Courier Prime', monospace; font-size: 15px; color: #4a443b; margin-top: 4px; line-height: 1.4; } .ds-entry:hover .ds-entry-what { color: #1c1a17; } .ds-entry:focus-visible { outline: 3px solid #b3312a; outline-offset: 4px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Open Case File",
+    "overview": "Ghost bus is an open case against the board. Every A4 surface (the cover at /, /stop, /ride, /live, /replay) is a manila case folder lying on a dark walnut desk: evidence is clipped or laid in as numbered exhibits, the findings are typed on off-white paper in typewriter ink, and a single rubber-stamp red marks what is suspicious and what has been ruled on. The system refuses the dark operations dashboard with KPI tiles; numbers live inside typed sentences, and a big one gets circled in marker rather than boxed in a tile.\n\nDensity is that of a real file: one folder fills the viewport, the papers inside sit slightly askew, and nothing floats free of the folder. The projector screen (/live, /replay) is sized entirely in viewport-height units so the whole file fits one 100vh desk; the phone screens size in pixels with 48px touch targets. The official data appears as \"the suspect\" in its own clothes: the amber dot-matrix stop board, quoted verbatim, with ghost bus's typed check underneath.\n\nMotion is physical and small: a marker ring drawn by hand, a stamp coming down, a number retyped one character at a time. Each respects reduced motion.",
+    "keyCharacteristics": [
+      "Desk, folder, paper, ink: four material layers, always in that order from back to front.",
+      "Typewriter for every finding; heavy grotesk only for titles and stamps.",
+      "Stamp red is rare and means suspicion or a verdict.",
+      "Evidence is labelled as exhibits (A: the city map, B: the board, C: the ride replay).",
+      "The real board is shown as itself, amber on black, never restyled into the file's palette."
+    ],
+    "rules": [
+      { "name": "The One Stamp Rule", "body": "Red is for suspicion and verdicts only: a stamp, a marker ring, a NO BUS, a bad check. If a red element is not accusing the board of something, it should be ink. Focus rings and text selection are the one functional exception.", "section": "colors" },
+      { "name": "The Suspect Wears Amber Rule", "body": "Amber on black belongs to the official board and nothing else. Ghost bus never speaks in amber; it types underneath.", "section": "colors" },
+      { "name": "The Typed Testimony Rule", "body": "Every number and finding is set in the typewriter, inside a sentence. Archivo Black is for titles and stamps, never for data.", "section": "typography" },
+      { "name": "The Retype Rule", "body": "A live number that changes is retyped one character at a time (90ms per character), never counted up or cross-faded.", "section": "typography" },
+      { "name": "The Laid-Down Rule", "body": "Loose papers on the projector tilt a fraction (exhibit -0.6deg, sheet +0.5deg); stamps tilt hard (-3 to -11deg) and multiply into the paper. Phone papers stay straight so typed text stays easy to read on a moving bus.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the four layers in order on every new surface: desk, one manila folder with a tab, paper, ink.",
+      "Do type every finding and number in Courier Prime inside a full sentence, and retype changed numbers character by character.",
+      "Do name evidence as exhibits in captions (\"Exhibit A.\", bold ink) and say what each mark means.",
+      "Do show the official board as amber Doto on black, with ghost bus's typed check directly underneath.",
+      "Do colour stamps by verdict: red for ghost or unverified, green for bus came, ink-soft for late or unclear.",
+      "Do keep 48px touch targets on phone screens and honour prefers-reduced-motion for the ring, the stamp and the retyping."
+    ],
+    "donts": [
+      "Don't use stamp red for anything that is not suspicion or a verdict (live indicators, hover states, counts, generic errors, the rider's own position).",
+      "Don't use amber for ghost bus's own text or controls; it belongs to the board.",
+      "Don't build KPI tiles, dashboard cards or a dark ops panel; findings are typed on paper.",
+      "Don't repeat defensive copy (the same caveat or \"unverified\" explanation on several elements of one screen); say it once, where it applies.",
+      "Don't use glyph icons (arrows, ticks, crosses, emoji); marks are drawn as SVG strokes or said in words.",
+      "Don't use hard offset shadows or glows; paper casts soft ambient shadows only.",
+      "Don't set data in Archivo Black or titles in the typewriter."
+    ]
+  }
+}
