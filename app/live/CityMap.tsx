@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { STYLE } from "../RideMap";
+import { metres } from "../analysis";
 
 maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 
@@ -18,7 +19,9 @@ export function paperColours(map: maplibregl.Map) {
   for (const layer of map.getStyle().layers) {
     const id = layer.id;
     try {
-      if (id.startsWith("poi") || id.includes("housenum") || id.includes("shield")) map.removeLayer(id); // road numbers clutter the print
+      // shop icons, house numbers and road numbers (L1562...) clutter the print
+      const label = JSON.stringify((layer as { layout?: Record<string, unknown> }).layout?.["text-field"] ?? "");
+      if (id.startsWith("poi") || id.includes("housenum") || id.includes("shield") || label.includes("ref")) map.removeLayer(id);
       else if (layer.type === "background") map.setPaintProperty(id, "background-color", "#f1ead8");
       else if (layer.type === "fill" && id.includes("water")) map.setPaintProperty(id, "fill-color", "#d9dedb");
       else if (layer.type === "fill") map.setPaintProperty(id, "fill-color", "#ebe3cf");
@@ -103,7 +106,12 @@ export default function CityMap({ buses, frozen, riders }: { buses: [number, num
     // exhibit tags on the three oldest positions
     for (const tag of tags.current) tag.remove();
     const view = map.getBounds(); // only buses you can actually see on the map get a tag
-    const oldest = frozen.filter((f) => view.contains([f.lon, f.lat])).sort((a, b) => b.age - a.age).slice(0, 3);
+    // the three oldest, but never two within 1.5 km of each other, so the tags don't sit on top of each other
+    const oldest: Frozen[] = [];
+    for (const bus of frozen.filter((f) => view.contains([f.lon, f.lat])).sort((a, b) => b.age - a.age)) {
+      if (oldest.length === 3) break;
+      if (oldest.every((o) => metres(o.lat, o.lon, bus.lat, bus.lon) > 1500)) oldest.push(bus);
+    }
     tags.current = oldest.map((bus) => {
       const element = document.createElement("div");
       element.className = "exhibit-tag";

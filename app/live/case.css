@@ -56,7 +56,13 @@
   background: var(--manila-edge);
 }
 .live-dot {
-  color: var(--stamp);
+  display: inline-block;
+  width: 0.9vh;
+  height: 0.9vh;
+  border-radius: 50%;
+  background: var(--stamp);
+  vertical-align: middle;
+  margin-right: 0.3vw;
 }
 
 .case-title {
@@ -81,12 +87,13 @@
   min-height: 0;
 }
 .exhibit-map {
+  background: #f1ead8; /* paper while the map loads */
   flex: 1;
   min-height: 0;
   border: 1px solid #cfc6b0;
 }
 .exhibit-caption {
-  font-size: 1.8vh;
+  font-size: 2vh;
   padding: 1vh 0.4vw 1.2vh;
   color: var(--ink-soft);
 }
@@ -161,12 +168,11 @@
 
 .findings {
   margin-top: 1.4vh;
-  font-size: 2.1vh;
+  font-size: 2.4vh;
   line-height: 1.35;
 }
 .findings li {
-  display: grid;
-  grid-template-columns: 3ch 1fr;
+  display: block;
   padding: 0.6vh 0;
   border-bottom: 1px dashed #b9b09b;
 }
@@ -196,7 +202,7 @@
 
 .source {
   grid-column: 1 / -1;
-  font-size: 1.6vh;
+  font-size: 1.8vh;
   color: var(--ink-soft);
   padding-top: 1.6vh;
 }
@@ -268,7 +274,7 @@
 }
 .scene-tabs button {
   font-family: var(--font-typed), monospace;
-  font-size: 1.6vh;
+  font-size: 1.8vh;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -296,8 +302,8 @@
   color: var(--ink-soft);
 }
 .qr {
-  width: 30vh;
-  height: 30vh;
+  width: 40vh;
+  height: 40vh;
 }
 .qr svg {
   width: 100%;
@@ -336,6 +342,7 @@
 }
 .verdict-entry:first-child .verdict-stamp-live {
   font-size: 3.6vh;
+  transform-origin: left center;
   animation: stamp-down 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .verdict-stamp-live.ghost {
@@ -360,7 +367,7 @@
 }
 @keyframes stamp-down {
   from {
-    transform: rotate(-3deg) scale(1.6);
+    transform: rotate(-3deg) scale(1.25);
     opacity: 0;
   }
   to {
@@ -396,6 +403,6 @@
   color: var(--paper);
 }
 .scene-tabs a {
-  font-size: 1.6vh;
+  font-size: 1.8vh;
   padding: 0.5vh 0.8vw;
 }

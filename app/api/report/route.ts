@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       reason = `Bus ${latest.bus.id} is on this trip, but its last position is ${Math.round(age / 60)} min old.`;
     } else {
       verdict = "late";
-      reason = `Bus ${latest.bus.id} is running this trip, ${away < 1000 ? `${away} m` : `${(away / 1000).toFixed(1)} km`} away. Late, not a ghost.`;
+      reason = `Bus ${latest.bus.id} is running this trip, ${away < 1000 ? `${away} m` : `${(away / 1000).toFixed(1)} km`} away.`;
     }
   } else if (atStop) {
     verdict = "ghost";
@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
 
   // other people who reported the same trip at the same stop
   const earlier = await db.collection("reports").where("stop", "==", stop).where("tripId", "==", tripId).get();
-  const witnesses = earlier.size + 1;
+  // demo reports (classroom) and real ones are counted apart
+  const witnesses = earlier.docs.filter((d) => d.data().demo === (demo === true)).length + 1;
 
   const report = {
     stop,

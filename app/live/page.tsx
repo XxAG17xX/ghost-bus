@@ -46,7 +46,7 @@ export default function LivePage() {
       if (!response.ok) return;
       const data: Live = await response.json();
       const newest = data.reports[0]?.at ?? 0;
-      if (newestReport.current !== null && newest > newestReport.current) setScene("verdicts");
+      if (newestReport.current !== null && newest > newestReport.current) setScene((now) => (now === "join" ? now : "verdicts"));
       newestReport.current = newest;
       setLive(data);
     }
@@ -102,7 +102,7 @@ export default function LivePage() {
       <div className="folder">
         <p className="tab tab-left">CASE GB-26 · DUBLIN BUS BOARDS · OPEN</p>
         <p className="tab tab-right">
-          <span className="live-dot">●</span> LIVE {time(now, true)} · NTA FEED{" "}
+          <span className="live-dot" aria-hidden="true" /> LIVE {time(now, true)} · NTA FEED{" "}
           {feedAge ?? "…"} S OLD
         </p>
 
@@ -111,13 +111,11 @@ export default function LivePage() {
         <section className="exhibit">
           <Paperclip />
           <div className="exhibit-map">
-            {live && (
-              <CityMap
-                buses={live.buses}
-                frozen={live.frozen}
-                riders={live.riders}
-              />
-            )}
+            <CityMap
+              buses={live?.buses ?? []}
+              frozen={live?.frozen ?? []}
+              riders={live?.riders ?? []}
+            />
           </div>
           <p className="exhibit-caption">
             <b>Exhibit A.</b> Dublin&apos;s buses at {live ? time(live.vehiclesAt) : "…"}. Ringed in red: position over 3 minutes old. Blue: ghost bus riders.
@@ -126,7 +124,7 @@ export default function LivePage() {
 
         <section className="sheet">
           <p className="sheet-head">
-            Findings at {live ? time(live.tripsAt) : "…"}
+            {scene === "join" ? "Witnesses" : scene === "verdicts" ? "Verdicts" : "Findings"} at {live ? time(live.tripsAt) : "…"}
           </p>
           {/* the first answer takes a few seconds, because my server asks the nta for every bus in ireland */}
           {!live && (
@@ -141,7 +139,7 @@ export default function LivePage() {
               <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
               <p className="join-link">{joinLink}</p>
               <p className="join-count">
-                <b>{riders}</b> witnesses connected
+                <b>{riders}</b> {live.riders.length === 1 ? "witness" : "witnesses"} connected
               </p>
             </div>
           )}
@@ -154,6 +152,7 @@ export default function LivePage() {
                   <p className="verdict-what">
                     <b>{r.route}</b> at {r.stopName} · {time(r.at)}
                     {r.witnesses > 1 && ` · ${r.witnesses} witnesses`}
+                    {r.demo && " · demo stop"}
                   </p>
                   <p className="verdict-why">{r.reason}</p>
                 </div>
@@ -174,22 +173,19 @@ export default function LivePage() {
 
               <ol className="findings">
                 <li>
-                  <span>2.</span>
                   <span>
                     <b>{frozen}</b> buses shown with a position over 3 minutes
                     old.
                   </span>
                 </li>
                 <li>
-                  <span>3.</span>
                   <span>
                     <b>{buses}</b> Dublin buses on the feed right now.
                   </span>
                 </li>
                 <li>
-                  <span>4.</span>
                   <span>
-                    <b>{riders}</b> witnesses on the ground with ghost bus.
+                    <b>{riders}</b> {live.riders.length === 1 ? "witness" : "witnesses"} on the ground with ghost bus.
                   </span>
                 </li>
               </ol>
@@ -198,7 +194,7 @@ export default function LivePage() {
                 <p className="log-head">
                   On the boards now, with no bus running them:
                 </p>
-                {live?.noBusExamples.slice(0, 3).map((trip, i) => (
+                {live?.noBusExamples.slice(0, 2).map((trip, i) => (
                   <p key={i} className="log-row">
                     <span>{trip.start}</span>
                     <span>{trip.route}</span>

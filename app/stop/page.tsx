@@ -132,7 +132,6 @@ export default function StopPage() {
         {!stopId && (
           <>
             <h1 className="stop-name">Which stop are you at?</h1>
-            <p className="stop-meta">Ghost bus checks every line on your stop&apos;s board against the buses actually out there.</p>
             <button className="case-button" onClick={findMyStop} disabled={finding}>
               {finding ? "Finding your stop…" : "Find my stop"}
             </button>
@@ -157,7 +156,7 @@ export default function StopPage() {
             </p>
 
             {demo && <p className="small-print">Demo stop: everyone here counts as standing at this stop.</p>}
-            <p className="exhibit-label">EXHIBIT B · WHAT THE BOARD SAYS, AND WHAT IS REALLY THERE</p>
+            <p className="exhibit-label">EXHIBIT B · THE BOARD</p>
             {board && board.rows.length === 0 && <p className="empty">Nothing due here in the next hour.</p>}
             {board?.rows.slice(0, 8).map((row, i) => (
               <div className="entry" key={i}>
@@ -175,7 +174,7 @@ export default function StopPage() {
                 ) : (
                   <div className={`check ${row.flag ? "bad" : row.vehicle ? "ok" : ""}`}>
                     <p>{check(row)}</p>
-                    {row.due < now && (
+                    {row.due < now - 2 * 60_000 && (
                       <button className="didnt-come" onClick={() => report(row)} disabled={reporting === row.tripId}>
                         {reporting === row.tripId ? "Checking…" : "It didn't come"}
                       </button>

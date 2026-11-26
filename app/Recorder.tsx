@@ -296,7 +296,7 @@ export default function Recorder() {
   const path = fixes.map((f) => [f.lon, f.lat] as [number, number]);
 
   // what the stop board says: how far the nearest live nta bus of my route is, and how old its position is
-  let board = { text: "NTA FEED STARTS WITH YOUR RIDE", bright: false, count: "" };
+  let board = { text: "FEED STARTS WITH RIDE", bright: false, count: "" };
   if (recording && ntaBuses === null) board = { text: "ASKING THE NTA...", bright: false, count: "" };
   if (ntaError) board = { text: "NTA FEED NOT REACHABLE", bright: false, count: "" };
   if (!ntaError && ntaBuses !== null && ntaBuses.length === 0) board = { text: "NO LIVE BUSES RIGHT NOW", bright: false, count: "" };
@@ -334,8 +334,8 @@ export default function Recorder() {
     cloudColour = "text-signal";
   }
 
-  let status = "Ready to record";
-  let underStatus = "Set your route, then start";
+  let status = "Ready";
+  let underStatus = "Set your route";
   if (fixes.length > 0) {
     status = "Stopped";
     // when the ride was, since the counts under the board already say how many fixes there are
@@ -369,7 +369,7 @@ export default function Recorder() {
           aria-label="Bus route"
           // the box grows with the route name (7A, 46A, 79/X...), so nothing gets cut off
           style={{ width: `${Math.max(route.length, 2) + 1.5}ch` }}
-          className="bg-white px-2 pb-0.5 pt-1 text-center font-condensed text-[44px] font-extrabold leading-none tracking-tight text-route"
+          className="bg-paper px-2 pb-0.5 pt-1 text-center font-condensed text-[44px] font-extrabold leading-none tracking-tight text-route"
         />
         <div className="min-w-0 leading-tight">
           <p className="text-[17px] font-semibold">{status}</p>
@@ -464,11 +464,11 @@ export default function Recorder() {
       <div className="fixed inset-x-0 bottom-0 grid grid-cols-[1fr_auto_auto] gap-2 border-t-2 border-ink bg-paper px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 lg:static lg:col-start-2">
         {recording ? (
           <button onClick={stop} className="min-h-14 bg-signal font-condensed text-[22px] font-extrabold uppercase tracking-[0.04em] text-white">
-            Stop recording
+            Stop ride
           </button>
         ) : (
           <button onClick={() => start()} className="min-h-14 bg-route font-condensed text-[22px] font-extrabold uppercase tracking-[0.04em] text-white">
-            {fixes.length > 0 ? "Start a new ride" : "Start recording"}
+            {fixes.length > 0 ? "New ride" : "Start ride"}
           </button>
         )}
         <button onClick={download} disabled={fixes.length === 0} className="min-h-14 border-2 border-ink px-4 text-[15px] font-bold disabled:opacity-40">
