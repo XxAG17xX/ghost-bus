@@ -1,0 +1,176 @@
+/* the phone screen at a bus stop, in the same case file look as the projector:
+   the real board is "the suspect" (amber dot matrix from assignment 3), and under each line ghost bus types its check */
+
+.case-phone {
+  --desk: #221d18;
+  --manila: #d6bb82;
+  --paper: #f4eedf;
+  --ink: #1c1a17;
+  --ink-soft: #4a443b;
+  --stamp: #b3312a;
+  --ok: #2f6b3a;
+  --amber: #ffb000;
+  --board: #0c0c0c;
+  min-height: 100dvh;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--font-typed), "Courier New", monospace;
+  padding: 44px 12px 24px;
+}
+.case-phone ::selection {
+  background: var(--stamp);
+  color: var(--paper);
+}
+
+.phone-folder {
+  position: relative;
+  background: var(--manila);
+  border-radius: 0 8px 8px 8px;
+  padding: 18px 14px 20px;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.45);
+}
+.phone-tab {
+  position: absolute;
+  top: -30px;
+  left: 0;
+  height: 32px;
+  padding: 7px 14px 0;
+  background: var(--manila);
+  border-radius: 8px 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.stop-name {
+  font-family: var(--font-case), sans-serif;
+  font-size: 30px;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+.stop-meta {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 6px 0 16px;
+}
+
+/* the buttons look like typed labels on card */
+.case-button {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-typed), monospace;
+  font-size: 17px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 12px;
+  cursor: pointer;
+}
+.case-button:focus-visible,
+.stop-choice:focus-visible {
+  outline: 3px solid var(--stamp);
+  outline-offset: 3px;
+}
+.case-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.small-print {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.stop-choice {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-family: var(--font-typed), monospace;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+.stop-choice span:last-child {
+  color: var(--ink-soft);
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+/* exhibit b: the board, as the real one looks */
+.exhibit-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 6px 0 6px;
+}
+.board {
+  background: var(--board);
+  border-radius: 6px;
+  padding: 8px 10px;
+  box-shadow: inset 0 0 0 3px #262626;
+}
+.board-line {
+  display: grid;
+  grid-template-columns: 3.4ch 1fr auto;
+  gap: 8px;
+  font-family: var(--font-doto), monospace;
+  font-weight: 900;
+  color: var(--amber);
+  font-size: 20px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.board-line .to {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* under each board line, ghost bus types what it found */
+.check {
+  background: var(--paper);
+  margin: 0 0 10px;
+  padding: 6px 10px 8px;
+  border-radius: 0 0 6px 6px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.check.ok {
+  color: var(--ok);
+}
+.check.bad {
+  color: var(--stamp);
+  font-weight: 700;
+}
+.entry + .entry {
+  margin-top: 4px;
+}
+
+.empty {
+  background: var(--paper);
+  border-radius: 6px;
+  padding: 14px;
+  font-size: 15px;
+}
+.change-stop {
+  margin-top: 16px;
+  background: none;
+  border: none;
+  font-family: var(--font-typed), monospace;
+  font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--ink);
+}

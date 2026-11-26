@@ -1,5 +1,5 @@
 import type {Metadata, Viewport} from "next";
-import {Barlow, Barlow_Condensed, Doto} from "next/font/google";
+import {Archivo_Black, Barlow, Barlow_Condensed, Courier_Prime, Doto} from "next/font/google";
 import "./globals.css";
 
 // the timetable fonts: Barlow for everything, the condensed one for big numbers and the route
@@ -22,6 +22,18 @@ const doto = Doto({
   weight: "900",
 });
 
+// the a4 case file: a heavy title face for the folder, and a typewriter for every finding
+const caseTitle = Archivo_Black({
+  variable: "--font-case",
+  subsets: ["latin"],
+  weight: "400",
+});
+const typed = Courier_Prime({
+  variable: "--font-typed",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Ghost bus recorder",
   description: "Records phone GPS on bus rides and saves it to the cloud as it happens",
@@ -39,7 +51,7 @@ export default function RootLayout({children}: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${barlow.variable} ${barlowCondensed.variable} ${doto.variable} h-full antialiased`}
+      className={`${barlow.variable} ${barlowCondensed.variable} ${doto.variable} ${caseTitle.variable} ${typed.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
