@@ -1,0 +1,256 @@
+/* the live screen looks like a case file on a desk: the map is "exhibit a", the findings are typed */
+
+.desk {
+  --desk: #221d18;
+  --manila: #d6bb82;
+  --manila-edge: #b99c62;
+  --paper: #f4eedf;
+  --ink: #1c1a17;
+  --ink-soft: #4a443b;
+  --stamp: #b3312a;
+  --witness: #2438a8; /* the route blue from assignment 3, for riders */
+  height: 100vh;
+  overflow: hidden;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--font-typed), "Courier New", monospace;
+  padding: 5vh 2.5vw 2.5vh;
+}
+
+.desk ::selection {
+  background: var(--stamp);
+  color: var(--paper);
+}
+
+/* the open folder, with a soft shadow on the desk */
+.folder {
+  position: relative;
+  height: 100%;
+  background: var(--manila);
+  border-radius: 0 0.6vh 0.6vh 0.6vh;
+  box-shadow: 0 1.5vh 4vh rgb(0 0 0 / 0.45);
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  column-gap: 2.5vw;
+  padding: 2.5vh 2.5vw 1.6vh;
+}
+
+/* the tabs sticking out of the top of the folder */
+.tab {
+  position: absolute;
+  top: -3.6vh;
+  height: 3.8vh;
+  padding: 0.7vh 1.4vw 0;
+  background: var(--manila);
+  border-radius: 0.8vh 0.8vh 0 0;
+  font-size: 1.8vh;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.tab-left {
+  left: 0;
+}
+.tab-right {
+  right: 2vw;
+  background: var(--manila-edge);
+}
+.live-dot {
+  color: var(--stamp);
+}
+
+.case-title {
+  grid-column: 1 / -1;
+  font-family: var(--font-case), sans-serif;
+  font-size: 6.4vh;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin-bottom: 2.2vh;
+}
+
+/* exhibit a: the printed map, clipped to the folder */
+.exhibit {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  padding: 1.2vh 1.2vh 0;
+  transform: rotate(-0.6deg);
+  box-shadow: 0 0.6vh 1.6vh rgb(0 0 0 / 0.28);
+  min-height: 0;
+}
+.exhibit-map {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid #cfc6b0;
+}
+.exhibit-caption {
+  font-size: 1.8vh;
+  padding: 1vh 0.4vw 1.2vh;
+  color: var(--ink-soft);
+}
+.exhibit-caption b {
+  color: var(--ink);
+}
+.paperclip {
+  position: absolute;
+  top: -3vh;
+  left: 12%;
+  width: 3vh;
+  height: 8vh;
+  z-index: 2;
+}
+
+/* the case sheet with the typed findings */
+.sheet {
+  position: relative;
+  background: var(--paper);
+  padding: 3vh 2vw;
+  transform: rotate(0.5deg);
+  box-shadow: 0 0.6vh 1.6vh rgb(0 0 0 / 0.28);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.sheet-head {
+  font-size: 1.9vh;
+  color: var(--ink-soft);
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1vh;
+  margin-bottom: 2.4vh;
+}
+.finding-main {
+  font-size: 3.6vh;
+  line-height: 1.15;
+  font-weight: 700;
+}
+/* the big number, circled in red marker */
+.marked {
+  position: relative;
+  display: inline-block;
+  font-size: 8.5vh;
+  line-height: 1;
+  padding: 0 0.4vw;
+  margin-right: 0.6vw;
+}
+.marked svg {
+  position: absolute;
+  inset: -1.4vh -1.2vw;
+  width: calc(100% + 2.4vw);
+  height: calc(100% + 2.8vh);
+  overflow: visible;
+}
+
+/* the rubber stamp */
+.stamp {
+  align-self: flex-end;
+  margin-top: 0.4vh;
+  font-family: var(--font-case), sans-serif;
+  font-size: 3.4vh;
+  letter-spacing: 0.06em;
+  color: var(--stamp);
+  border: 0.5vh solid var(--stamp);
+  border-radius: 0.6vh;
+  padding: 0.4vh 1vw;
+  transform: rotate(-11deg);
+  opacity: 0.85;
+  mix-blend-mode: multiply;
+}
+
+.findings {
+  margin-top: 1.4vh;
+  font-size: 2.1vh;
+  line-height: 1.35;
+}
+.findings li {
+  display: grid;
+  grid-template-columns: 3ch 1fr;
+  padding: 0.6vh 0;
+  border-bottom: 1px dashed #b9b09b;
+}
+.findings b {
+  font-size: 2.8vh;
+}
+
+.log {
+  margin-top: auto;
+  padding-top: 1.2vh;
+  font-size: 2.1vh;
+}
+.log-head {
+  color: var(--ink-soft);
+  margin-bottom: 0.6vh;
+}
+.log-row {
+  display: grid;
+  grid-template-columns: 7ch 7ch 1fr;
+  padding: 0.35vh 0;
+}
+.log-row .no-bus {
+  color: var(--stamp);
+  font-weight: 700;
+  text-align: right;
+}
+
+.source {
+  grid-column: 1 / -1;
+  font-size: 1.6vh;
+  color: var(--ink-soft);
+  padding-top: 1.6vh;
+}
+
+/* map pieces drawn as html on top of the map */
+.red-ring {
+  display: block;
+  width: 3.2vh;
+  height: 3.2vh;
+  overflow: visible;
+}
+.red-ring path {
+  fill: none;
+  stroke: var(--stamp);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+/* a new frozen bus gets its ring drawn by hand */
+.red-ring.new path {
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  animation: draw-ring 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes draw-ring {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.exhibit-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4vw;
+  pointer-events: none;
+}
+.exhibit-tag i {
+  display: block;
+  width: 3vw;
+  height: 2px;
+  background: var(--ink);
+}
+.exhibit-tag span {
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 0.4vh;
+  padding: 0.3vh 0.6vw;
+  font-size: 1.7vh;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 0.3vh 0.8vh rgb(0 0 0 / 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .red-ring.new path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

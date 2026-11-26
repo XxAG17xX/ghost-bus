@@ -1,8 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Frozen, Rider } from "./CityMap";
+import "./case.css";
 
 // the map only works in the browser, so it's loaded there
 const CityMap = dynamic(() => import("./CityMap"), { ssr: false });
@@ -18,15 +19,10 @@ type Live = {
   riders: Rider[];
 };
 
-// the projector screen for the demo: the whole of dublin, live, checked every minute
+// the projector screen for the demo: dublin's buses as an open case file, live from the nta
 export default function LivePage() {
   const [live, setLive] = useState<Live | null>(null);
   const [now, setNow] = useState(Date.now());
-
-  // always the night board on the projector
-  useEffect(() => {
-    document.documentElement.dataset.theme = "dark";
-  }, []);
 
   // ask my server every 20 s (it only calls the nta once a minute)
   useEffect(() => {
@@ -39,99 +35,170 @@ export default function LivePage() {
     return () => clearInterval(timer);
   }, []);
 
-  // the clock and the "feed is x s old" tick every second
+  // the clock and the feed age tick every second
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const feedAge = live ? Math.max(0, Math.round((now - live.vehiclesAt) / 1000)) : null;
-  const clock = new Date(now).toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const time = (ms: number, seconds = false) =>
+    new Date(ms).toLocaleTimeString("en-IE", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: seconds ? "2-digit" : undefined,
+    });
+  const feedAge = live
+    ? Math.max(0, Math.round((now - live.vehiclesAt) / 1000))
+    : null;
+
+  const noBus = useTyped(live ? String(live.noBus) : "…");
+  const frozen = useTyped(live ? String(live.frozen.length) : "…");
+  const buses = useTyped(live ? String(live.buses.length) : "…");
+  const riders = useTyped(live ? String(live.riders.length) : "…");
 
   return (
-    <main className="grid h-screen grid-cols-[3fr_2fr] grid-rows-[auto_1fr_auto] bg-board text-ink">
-      <header className="col-span-2 flex items-baseline justify-between border-b border-rule px-8 py-4">
-        <h1 className="font-condensed text-4xl font-bold tracking-wide">
-          GHOST BUS <span className="text-signal">● LIVE</span> <span className="text-muted">DUBLIN</span>
-        </h1>
-        <p className="font-dot text-3xl text-amber">
-          {clock} · NTA FEED {feedAge === null ? "…" : `${feedAge}S`} OLD
+    <main className="desk">
+      <div className="folder">
+        <p className="tab tab-left">CASE GB-26 · DUBLIN BUS BOARDS · OPEN</p>
+        <p className="tab tab-right">
+          <span className="live-dot">●</span> LIVE {time(now, true)} · NTA FEED{" "}
+          {feedAge ?? "…"} S OLD
         </p>
-      </header>
 
-      <section className="relative border-r border-rule">
-        {live && <CityMap buses={live.buses} frozen={live.frozen} riders={live.riders} />}
-        <p className="absolute bottom-4 left-4 bg-board/80 px-3 py-2 text-lg text-muted">
-          <span className="text-amber">●</span> bus on the NTA feed &nbsp; <span className="text-ink">◯</span> position over 3 min old &nbsp;{" "}
-          <span className="text-signal">●</span> ghost bus rider
+        <h1 className="case-title">The Ghost Bus File</h1>
+
+        <section className="exhibit">
+          <Paperclip />
+          <div className="exhibit-map">
+            {live && (
+              <CityMap
+                buses={live.buses}
+                frozen={live.frozen}
+                riders={live.riders}
+              />
+            )}
+          </div>
+          <p className="exhibit-caption">
+            <b>Exhibit A.</b> Dublin&apos;s buses at {live ? time(live.vehiclesAt) : "…"}. Ringed in red: position over 3 minutes old. Blue: ghost bus riders.
+          </p>
+        </section>
+
+        <section className="sheet">
+          <p className="sheet-head">
+            Findings at {live ? time(live.tripsAt) : "…"}
+          </p>
+          {/* the first answer takes a few seconds, because my server asks the nta for every bus in ireland */}
+          {!live && (
+            <p className="finding-main">
+              Opening the case: asking the NTA for every bus in Dublin…
+            </p>
+          )}
+          {live && (
+            <>
+              <p className="finding-main">
+                <span className="marked">
+                  {noBus}
+                  <MarkerCircle />
+                </span>{" "}
+                of {live?.shouldBeRunning ?? "…"} trips due on the boards have
+                no bus running them.
+              </p>
+              <p className="stamp">UNVERIFIED</p>
+
+              <ol className="findings">
+                <li>
+                  <span>2.</span>
+                  <span>
+                    <b>{frozen}</b> buses shown with a position over 3 minutes
+                    old.
+                  </span>
+                </li>
+                <li>
+                  <span>3.</span>
+                  <span>
+                    <b>{buses}</b> Dublin buses on the feed right now.
+                  </span>
+                </li>
+                <li>
+                  <span>4.</span>
+                  <span>
+                    <b>{riders}</b> witnesses on the ground with ghost bus.
+                  </span>
+                </li>
+              </ol>
+
+              <div className="log">
+                <p className="log-head">
+                  On the boards now, with no bus running them:
+                </p>
+                {live?.noBusExamples.slice(0, 3).map((trip, i) => (
+                  <p key={i} className="log-row">
+                    <span>{trip.start}</span>
+                    <span>{trip.route}</span>
+                    <span className="no-bus">NO BUS</span>
+                  </p>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+
+        <p className="source">
+          Source: NTA GTFS-Realtime vehicle positions and trip updates (CC BY 4.0, provided as is).
         </p>
-      </section>
-
-      <section className="flex flex-col gap-8 overflow-hidden px-8 py-6">
-        {/* the stop board telling on itself: each line is a number from the nta's own data */}
-        <div className="font-dot text-amber">
-          <BoardLine label="BUSES ON THE FEED NOW" value={live?.buses.length} />
-          <BoardLine label="POSITION OVER 3 MIN OLD" value={live?.frozen.length} />
-          <BoardLine label="TRIPS DUE WITH NO BUS" value={live?.noBus} after={live ? ` / ${live.shouldBeRunning}` : ""} />
-          <BoardLine label="RIDERS CONNECTED" value={live?.riders.length} />
-        </div>
-
-        <div>
-          <h2 className="mb-2 font-condensed text-2xl font-bold text-muted">ON THE BOARDS, BUT NO BUS IS RUNNING THEM</h2>
-          <ul className="font-dot text-2xl text-amber">
-            {live?.noBusExamples.map((trip, i) => (
-              <li key={i} className="flex justify-between border-b border-rule/60 py-1">
-                <span className="w-24">{trip.route}</span>
-                <span className="flex-1">{trip.start}</span>
-                <span className="text-signal">NO BUS</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <footer className="col-span-2 border-t border-rule px-8 py-2 text-base text-muted">
-        Live data: NTA GTFS-Realtime (vehicle positions and trip updates), CC BY 4.0, provided as is. Saved and checked every minute by ghost bus.
-      </footer>
+      </div>
     </main>
   );
 }
 
-// one line of the board, with the number counting up to its new value
-function BoardLine({ label, value, after = "" }: { label: string; value: number | undefined; after?: string }) {
-  const shown = useCountUp(value ?? 0);
+// when a number changes it gets typed again, one character at a time, like a typewriter
+// (no typing if the laptop asks for less motion)
+function useTyped(text: string) {
+  const [shown, setShown] = useState(text);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(text);
+      return;
+    }
+    let letters = 0;
+    setShown("");
+    const timer = setInterval(() => {
+      letters++;
+      setShown(text.slice(0, letters));
+      if (letters >= text.length) clearInterval(timer);
+    }, 90);
+    return () => clearInterval(timer);
+  }, [text]);
+  return shown;
+}
+
+// a red marker circle drawn around the big number
+function MarkerCircle() {
   return (
-    <p className="flex justify-between border-b border-rule/60 py-2 text-3xl">
-      <span>{label}</span>
-      <span className="text-5xl">
-        {value === undefined ? "…" : shown}
-        <span className="text-2xl text-amber-dim">{after}</span>
-      </span>
-    </p>
+    <svg viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        d="M30 22 C70 2, 170 4, 190 40 C204 70, 150 96, 92 95 C36 94, 4 74, 10 46 C14 26, 44 14, 80 10"
+        fill="none"
+        stroke="#b3312a"
+        strokeWidth="4"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
   );
 }
 
-// counts from the old number to the new one in about half a second (no animation if the laptop asks for less motion)
-function useCountUp(target: number) {
-  const [shown, setShown] = useState(target);
-  const from = useRef(target);
-  useEffect(() => {
-    const start = from.current;
-    if (start === target || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      from.current = target;
-      setShown(target);
-      return;
-    }
-    const began = performance.now();
-    let frame = 0;
-    const step = (t: number) => {
-      const share = Math.min(1, (t - began) / 600);
-      setShown(Math.round(start + (target - start) * (1 - (1 - share) ** 3))); // slows down at the end
-      if (share < 1) frame = requestAnimationFrame(step);
-      else from.current = target;
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [target]);
-  return shown;
+// the paperclip holding exhibit a to the folder
+function Paperclip() {
+  return (
+    <svg className="paperclip" viewBox="0 0 30 80" aria-hidden="true">
+      <path
+        d="M10 60 V14 a8 8 0 0 1 16 0 V66 a12 12 0 0 1 -24 0 V22"
+        fill="none"
+        stroke="#8f8f8f"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }

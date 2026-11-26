@@ -3,69 +3,113 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { colour, recolour, STYLE } from "../RideMap";
+import { STYLE } from "../RideMap";
 
 maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 
 export type Frozen = { id: string; route: string; lat: number; lon: number; age: number };
 export type Rider = { lat: number; lon: number; mode: string };
 
-// all of dublin on the projector: every bus as a small amber dot,
-// frozen buses as hollow rings (the ghosts), and people using the app as red dots
+// a hand drawn circle, like someone ringed the bus with a red marker
+const RING = `<svg class="red-ring" viewBox="0 0 44 44"><path d="M8 18 C9 7, 33 3, 38 17 C42 30, 25 41, 13 36 C4 32, 3 22, 11 12" /></svg>`;
+
+// the map looks like a paper print: light paper, ink roads, ink labels
+function paperColours(map: maplibregl.Map) {
+  for (const layer of map.getStyle().layers) {
+    const id = layer.id;
+    try {
+      if (id.startsWith("poi") || id.includes("housenum")) map.removeLayer(id);
+      else if (layer.type === "background") map.setPaintProperty(id, "background-color", "#f1ead8");
+      else if (layer.type === "fill" && id.includes("water")) map.setPaintProperty(id, "fill-color", "#d9dedb");
+      else if (layer.type === "fill") map.setPaintProperty(id, "fill-color", "#ebe3cf");
+      else if (layer.type === "line" && id.includes("water")) map.setPaintProperty(id, "line-color", "#c9d0cc");
+      else if (layer.type === "line" && !id.includes("boundary")) map.setPaintProperty(id, "line-color", "#cfc5ad");
+      else if (layer.type === "symbol") {
+        map.setPaintProperty(id, "text-color", "#5a5246");
+        map.setPaintProperty(id, "text-halo-color", "#f1ead8");
+      }
+    } catch {
+      // some layers don't have that colour, fine
+    }
+  }
+}
+
+// exhibit a: every dublin bus as an ink dot, frozen buses ringed in red,
+// the three oldest get an exhibit tag, and riders are blue ink dots
 export default function CityMap({ buses, frozen, riders }: { buses: [number, number][]; frozen: Frozen[]; riders: Rider[] }) {
   const box = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const rings = useRef(new Map<string, maplibregl.Marker>()); // bus id -> its red ring
+  const tags = useRef<maplibregl.Marker[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const map = new maplibregl.Map({
       container: box.current!,
       style: STYLE,
-      center: [-6.27, 53.35],
-      zoom: 10.6,
-      interactive: false, // it's on a projector, nobody drags it
+      center: [-6.27, 53.345],
+      zoom: 10.7,
+      interactive: false, // it's on a projector
       attributionControl: { compact: true },
     });
     map.on("load", () => {
-      for (const id of ["nta", "ghosts", "riders"]) {
-        map.addSource(id, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-      }
-      map.addLayer({ id: "nta", type: "circle", source: "nta", paint: { "circle-radius": 2.5, "circle-opacity": 0.55, "circle-stroke-width": 0 } });
-      // a ghost is an empty ring, and the older its position, the bigger and fainter it gets
+      map.addSource("nta", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addSource("riders", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({ id: "nta", type: "circle", source: "nta", paint: { "circle-radius": 2.6, "circle-color": "#1c1a17", "circle-opacity": 0.75 } });
       map.addLayer({
-        id: "ghosts",
+        id: "riders",
         type: "circle",
-        source: "ghosts",
-        paint: {
-          "circle-color": "rgba(0,0,0,0)",
-          "circle-stroke-width": 2,
-          "circle-radius": ["interpolate", ["linear"], ["get", "age"], 180, 6, 900, 14],
-          "circle-stroke-opacity": ["interpolate", ["linear"], ["get", "age"], 180, 0.95, 900, 0.35],
-        },
+        source: "riders",
+        paint: { "circle-radius": 8, "circle-color": "#2438a8", "circle-stroke-width": 2.5, "circle-stroke-color": "#f4eedf" },
       });
-      map.addLayer({ id: "riders", type: "circle", source: "riders", paint: { "circle-radius": 7, "circle-stroke-width": 2 } });
-      recolour(map);
-      map.setPaintProperty("ghosts", "circle-stroke-color", colour("--ink"));
-      map.setPaintProperty("riders", "circle-color", colour("--signal"));
-      map.setPaintProperty("riders", "circle-stroke-color", colour("--paper"));
+      paperColours(map);
       setReady(true);
     });
     mapRef.current = map;
     return () => map.remove();
   }, []);
 
-  // new numbers every 20 s: move all the dots
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    const points = (list: { coords: [number, number]; props?: object }[]) => ({
+    const points = (coords: [number, number][]) => ({
       type: "FeatureCollection" as const,
-      features: list.map((p) => ({ type: "Feature" as const, properties: p.props ?? {}, geometry: { type: "Point" as const, coordinates: p.coords } })),
+      features: coords.map((c) => ({ type: "Feature" as const, properties: {}, geometry: { type: "Point" as const, coordinates: c } })),
     });
-    (map.getSource("nta") as maplibregl.GeoJSONSource).setData(points(buses.map((b) => ({ coords: b }))));
-    (map.getSource("ghosts") as maplibregl.GeoJSONSource).setData(points(frozen.map((f) => ({ coords: [f.lon, f.lat], props: { age: f.age } }))));
-    (map.getSource("riders") as maplibregl.GeoJSONSource).setData(points(riders.map((r) => ({ coords: [r.lon, r.lat] }))));
+    (map.getSource("nta") as maplibregl.GeoJSONSource).setData(points(buses));
+    (map.getSource("riders") as maplibregl.GeoJSONSource).setData(points(riders.map((r) => [r.lon, r.lat])));
+
+    // red rings: keep the ones still frozen, draw new ones, remove buses that sent a new position
+    const stillFrozen = new Set(frozen.map((f) => f.id));
+    for (const [id, marker] of rings.current) {
+      if (!stillFrozen.has(id)) {
+        marker.remove();
+        rings.current.delete(id);
+      }
+    }
+    const firstTime = rings.current.size === 0; // on the first load all rings appear at once, no drawing
+    for (const bus of frozen) {
+      const old = rings.current.get(bus.id);
+      if (old) {
+        old.setLngLat([bus.lon, bus.lat]);
+        continue;
+      }
+      const element = document.createElement("div");
+      element.innerHTML = RING;
+      if (!firstTime) element.firstElementChild!.classList.add("new"); // a newly frozen bus gets its ring drawn
+      rings.current.set(bus.id, new maplibregl.Marker({ element }).setLngLat([bus.lon, bus.lat]).addTo(map));
+    }
+
+    // exhibit tags on the three oldest positions
+    for (const tag of tags.current) tag.remove();
+    const oldest = [...frozen].sort((a, b) => b.age - a.age).slice(0, 3);
+    tags.current = oldest.map((bus) => {
+      const element = document.createElement("div");
+      element.className = "exhibit-tag";
+      element.innerHTML = `<i></i><span>${bus.route || "?"} · ${Math.round(bus.age / 60)} MIN OLD</span>`;
+      return new maplibregl.Marker({ element, anchor: "left", offset: [14, 0] }).setLngLat([bus.lon, bus.lat]).addTo(map);
+    });
   }, [buses, frozen, riders, ready]);
 
-  return <div ref={box} className="h-full w-full" role="img" aria-label="Map of Dublin with every bus, frozen buses as empty rings" />;
+  return <div ref={box} className="h-full w-full" role="img" aria-label="Map of Dublin: every bus on the NTA feed as a dot, buses with a position over 3 minutes old ringed in red" />;
 }
