@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   const now = Date.now();
   const copies = await db.collection("nta_feed").where("fetchedAt", ">=", new Date(due - 20 * 60_000)).orderBy("fetchedAt").get();
   const seen: { bus: Bus; at: number }[] = [];
-  let another: Bus | null = null; // a different bus of the same route and direction that passed the stop
+  let another: Bus | null = null; // a later bus of the same route and direction that passed the stop (for the note only)
   for (const doc of copies.docs) {
     const vehicles = doc.data().vehicles as Bus[];
     const bus = vehicles.find((v) => v.tripId === tripId);
@@ -89,12 +89,11 @@ export async function POST(request: NextRequest) {
       verdict = "late";
       reason = `Bus ${latest.bus.id} is running this trip, ${away < 1000 ? `${away} m` : `${(away / 1000).toFixed(1)} km`} away.`;
     }
-  } else if (another) {
-    verdict = "came";
-    reason = `No bus ran this trip, but another ${route} (bus ${another.id}) passed this stop at ${time(another.sentAt)}.`;
   } else if (atStop) {
     verdict = "ghost";
-    reason = `${body.cancelled ? "The NTA cancelled this trip, but the board kept it. " : ""}No bus ran this trip in the last ${Math.round((now - due) / 60_000) + 20} minutes, while the board kept showing it.`;
+    // a later bus of the same route doesn't save this line: it belongs to the next line on the board
+    const next = another ? ` The next ${route} (bus ${another.id}) came at ${time(another.sentAt)}, but that one is the next line on the board.` : "";
+    reason = `${body.cancelled ? "The NTA cancelled this trip, but the board kept it. " : ""}No bus ran this trip in the last ${Math.round((now - due) / 60_000) + 20} minutes, while the board kept showing it.${next}`;
   } else {
     verdict = "unclear";
     reason = "No bus ran this trip, but your phone wasn't at the stop, so it can't count as a witness.";
