@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import "./stop.css";
 
-type Row = { rider: { metres: number; age: number; passed: boolean } | null; direction: number | null; passed: boolean; tripId: string; startDate: string; route: string; to: string; due: number; vehicle: string | null; age: number | null; metres: number | null; flag: string };
+type Row = { saidNo: { count: number; stopName: string; at: number } | null; rider: { metres: number; age: number; passed: boolean } | null; direction: number | null; passed: boolean; tripId: string; startDate: string; route: string; to: string; due: number; vehicle: string | null; age: number | null; metres: number | null; flag: string };
 type Board = { stop: { id: string; name: string; lat: number; lon: number }; tripsAt: number; rows: Row[] };
 type Verdict = { verdict: string; reason: string; witnesses: number };
 
@@ -117,7 +117,8 @@ export default function StopPage() {
     history.replaceState(null, "", `?stop=${id}`);
   }
 
-  // "it didn't come": the server checks it against the nta's data and sends back a verdict.
+  // "did it come?": the server checks the trip against the nta's data and the riders, and sends back a verdict.
+  // a "no" is saved, so the next person waiting for that bus sees it
   // only the distance to the stop is sent, never my location
   async function report(row: Row) {
     setReporting(row.tripId);
@@ -198,14 +199,20 @@ export default function StopPage() {
                   <div className="check verdict">
                     <p className={`verdict-stamp ${verdicts[row.tripId].verdict}`}>{STAMPS[verdicts[row.tripId].verdict]}</p>
                     <p>{verdicts[row.tripId].reason}</p>
-                    {verdicts[row.tripId].witnesses > 1 && <p className="small-print">{verdicts[row.tripId].witnesses} people reported this trip here.</p>}
+                    {verdicts[row.tripId].witnesses > 1 && <p className="small-print">{verdicts[row.tripId].witnesses} people asked about this bus here.</p>}
                   </div>
                 ) : (
                   <div className={`check ${row.rider ? "ok rider" : row.flag ? "bad" : row.vehicle ? "ok" : ""}`}>
                     <p>{check(row)}</p>
+                    {row.saidNo && (
+                      <p className="said-no">
+                        {row.saidNo.count === 1 ? "1 person" : `${row.saidNo.count} people`} at {row.saidNo.stopName} found no bus for this
+                        one ({new Date(row.saidNo.at).toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit" })}).
+                      </p>
+                    )}
                     {row.due < now - 2 * 60_000 && (
                       <button className="didnt-come" onClick={() => report(row)} disabled={reporting === row.tripId}>
-                        {reporting === row.tripId ? "Checking…" : "It didn't come"}
+                        {reporting === row.tripId ? "Checking…" : "Did it come?"}
                       </button>
                     )}
                   </div>
@@ -235,8 +242,8 @@ function sessionId() {
 
 // what ghost bus types under a board line
 function check(row: Row) {
-  if (row.rider?.passed) return "A ghost bus rider on this bus already went past this stop.";
-  if (row.rider) return `A ghost bus rider is on this bus: ${away(row.rider.metres)} away, ${row.rider.age} s ago.`;
+  if (row.rider?.passed) return "Someone on this bus: it already went past this stop.";
+  if (row.rider) return `Someone on this bus: ${away(row.rider.metres)} away, ${row.rider.age} s ago.`;
   if (row.flag === "cancelled") return "The NTA has cancelled this trip, but it's still listed.";
   if (row.flag === "no bus") return "No bus is running this trip right now.";
   if (row.passed && row.flag === "frozen") return `Bus ${row.vehicle} was already past this stop ${Math.round(row.age! / 60)} min ago.`;

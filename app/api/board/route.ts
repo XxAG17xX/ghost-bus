@@ -45,6 +45,16 @@ export async function GET(request: NextRequest) {
     if (r.mode === "bus" && r.busId) riders.set(r.busId, { lat: r.lat, lon: r.lon, at: r.at });
   }
 
+  // "no bus came" answers from the last 2 hours, by trip, so the next person waiting for that bus sees them
+  const recentNo = await db.collection("reports").where("at", ">", now - 2 * 3600_000).get();
+  const saidNo = new Map<string, { count: number; stopName: string; at: number }>();
+  for (const d of recentNo.docs) {
+    const r = d.data();
+    if (r.verdict !== "ghost") continue;
+    const old = saidNo.get(r.tripId);
+    saidNo.set(r.tripId, { count: (old?.count ?? 0) + 1, stopName: r.stopName, at: Math.max(old?.at ?? 0, r.at) });
+  }
+
   const rows = [];
   for (const trip of trips) {
     if (!routesHere.has(trip.routeId)) continue;
@@ -101,6 +111,7 @@ export async function GET(request: NextRequest) {
     }
 
     rows.push({
+      saidNo: saidNo.get(trip.tripId) ?? null,
       rider: rider,
       direction: trip.direction,
       passed: passed,

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // was a ghost bus rider on the bus running this trip? if their phone passed the stop, it came
+  // was someone using the app on the bus running this trip? if their phone passed the stop, it came
   let riderPassed: { busId: string; time: string } | null = null;
   const busIds = new Set(seen.map((s) => s.bus.id));
   if (busIds.size > 0) {
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
   let reason = "";
   if (riderPassed) {
     verdict = "came";
-    reason = `A ghost bus rider was on bus ${riderPassed.busId}: their phone passed this stop at ${time(Date.parse(riderPassed.time) / 1000)}.`;
+    reason = `Someone was on bus ${riderPassed.busId}. Their phone passed this stop at ${time(Date.parse(riderPassed.time) / 1000)}.`;
   } else if (closest && closest.m <= PASSED) {
     verdict = "came";
     reason = `Bus ${closest.bus.id} passed this stop at ${time(closest.bus.sentAt)}.`;
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     reason = `${body.cancelled ? "The NTA cancelled this trip, but the board kept it. " : ""}No bus ran this trip in the last ${Math.round((now - due) / 60_000) + 20} minutes, while the board kept showing it.${next}`;
   } else {
     verdict = "unclear";
-    reason = "No bus ran this trip, but your phone wasn't at the stop, so it can't count as a witness.";
+    reason = "No bus ran this trip, but your phone wasn't at the stop, so this can't be confirmed.";
   }
 
   // other people who reported the same trip at the same stop

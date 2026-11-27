@@ -10,7 +10,7 @@ export default function Home() {
         <h1 className="cover-title">The Ghost Bus File</h1>
         <p className="cover-lede">
           The board says your bus is coming. Is it? Ghost bus checks every line on Dublin&apos;s boards against the buses
-          actually out there, and riders are the witnesses.
+          actually out there, and people on the buses help the people waiting.
         </p>
 
         <nav className="cover-index" aria-label="What are you doing?">
@@ -20,7 +20,7 @@ export default function Home() {
           </Link>
           <Link href="/ride" className="cover-entry">
             <span className="cover-entry-title">I&apos;m on a bus</span>
-            <span className="cover-entry-what">Record the ride. Your phone shows where the bus really is.</span>
+            <span className="cover-entry-what">Share where your bus really is with the people waiting for it.</span>
           </Link>
           <Link href="/live" className="cover-entry">
             <span className="cover-entry-title">Show the whole city</span>

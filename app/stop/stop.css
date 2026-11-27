@@ -336,3 +336,11 @@ a.phone-tab:focus-visible {
 .check.rider {
   font-weight: 700;
 }
+
+/* other people's answers for the same bus */
+.said-no {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--stamp);
+}

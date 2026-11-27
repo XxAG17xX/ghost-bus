@@ -26,7 +26,19 @@ export async function GET() {
       return { route: r.route, stopName: r.stopName, verdict: r.verdict, reason: r.reason, witnesses: r.witnesses, at: r.at, demo: r.demo };
     });
 
+    // the case archive: the newest real example of each verdict ever made, for when nothing happened in the last 2 hours
+    const older = await db.collection("reports").orderBy("at", "desc").limit(300).get();
+    const archive = [];
+    for (const kind of ["ghost", "came", "late", "unclear"]) {
+      const found = older.docs.find((d) => d.data().verdict === kind);
+      if (found) {
+        const r = found.data();
+        archive.push({ route: r.route, stopName: r.stopName, verdict: r.verdict, reason: r.reason, witnesses: r.witnesses, at: r.at, demo: r.demo });
+      }
+    }
+
     return Response.json({
+      archive: archive,
       reports: reports,
       vehiclesAt: fetchedAt,
       tripsAt: tripsAt,

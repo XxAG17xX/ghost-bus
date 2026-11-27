@@ -20,6 +20,7 @@ type Live = {
   noBus: number;
   noBusExamples: { route: string; start: string; delay: number | null }[];
   riders: Rider[];
+  archive: { route: string; stopName: string; verdict: string; reason: string; witnesses: number; at: number; demo: boolean }[];
   reports: { route: string; stopName: string; verdict: string; reason: string; witnesses: number; at: number; demo: boolean }[];
 };
 
@@ -118,13 +119,13 @@ export default function LivePage() {
             />
           </div>
           <p className="exhibit-caption">
-            <b>Exhibit A.</b> Dublin&apos;s buses at {live ? time(live.vehiclesAt) : "…"}. Ringed in red: position over 3 minutes old. Blue: ghost bus riders.
+            <b>Exhibit A.</b> Dublin&apos;s buses at {live ? time(live.vehiclesAt) : "…"}. Ringed in red: position over 3 minutes old. Blue: people using the app.
           </p>
         </section>
 
         <section className="sheet">
           <p className="sheet-head">
-            {scene === "join" ? "Witnesses" : scene === "verdicts" ? "Verdicts" : "Findings"} at {live ? time(live.tripsAt) : "…"}
+            {scene === "join" ? "People" : scene === "verdicts" ? "Verdicts" : "Findings"} at {live ? time(live.tripsAt) : "…"}
           </p>
           {/* the first answer takes a few seconds, because my server asks the nta for every bus in ireland */}
           {!live && (
@@ -134,24 +135,27 @@ export default function LivePage() {
           )}
           {live && scene === "join" && (
             <div className="join">
-              <p className="finding-main">Be a witness.</p>
+              <p className="finding-main">Try it on your phone.</p>
               <p className="join-what">Scan this. Your phone shows the board at the stop, and what is really behind each line.</p>
               <div className="qr" dangerouslySetInnerHTML={{ __html: qr }} />
               <p className="join-link">{joinLink}</p>
               <p className="join-count">
-                <b>{riders}</b> {live.riders.length === 1 ? "witness" : "witnesses"} connected
+                <b>{riders}</b> {live.riders.length === 1 ? "person" : "people"} using it now
               </p>
             </div>
           )}
           {live && scene === "verdicts" && (
             <div className="verdicts">
-              {live.reports.length === 0 && <p className="join-what">No reports yet. Press &quot;It didn&apos;t come&quot; on a line that&apos;s overdue.</p>}
-              {live.reports.map((r, i) => (
+              {live.reports.length === 0 && <p className="join-what">No checks yet. Press &quot;Did it come?&quot; on a line that&apos;s overdue.</p>}
+              {live.reports.length === 0 && live.archive.length > 0 && (
+                <p className="join-what">From the case archive: real checks from earlier days.</p>
+              )}
+              {(live.reports.length > 0 ? live.reports : live.archive).map((r, i) => (
                 <div key={i} className="verdict-entry">
                   <p className={`verdict-stamp-live ${r.verdict}`}>{STAMPS[r.verdict]}</p>
                   <p className="verdict-what">
-                    <b>{r.route}</b> at {r.stopName} · {time(r.at)}
-                    {r.witnesses > 1 && ` · ${r.witnesses} witnesses`}
+                    <b>{r.route}</b> at {r.stopName} · {live.reports.length > 0 ? time(r.at) : new Date(r.at).toLocaleString("en-IE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    {r.witnesses > 1 && ` · ${r.witnesses} people`}
                     {r.demo && " · demo stop"}
                   </p>
                   <p className="verdict-why">{r.reason}</p>
@@ -185,7 +189,7 @@ export default function LivePage() {
                 </li>
                 <li>
                   <span>
-                    <b>{riders}</b> {live.riders.length === 1 ? "witness" : "witnesses"} on the ground with ghost bus.
+                    <b>{riders}</b> {live.riders.length === 1 ? "person" : "people"} using the app right now.
                   </span>
                 </li>
               </ol>
