@@ -64,11 +64,33 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // was a ghost bus rider on the bus running this trip? if their phone passed the stop, it came
+  let riderPassed: { busId: string; time: string } | null = null;
+  const busIds = new Set(seen.map((s) => s.bus.id));
+  if (busIds.size > 0) {
+    const onBoard = await db.collection("live_riders").where("mode", "==", "bus").get();
+    for (const r of onBoard.docs) {
+      const rideId = r.data().rideId;
+      if (!rideId || !busIds.has(r.data().busId) || riderPassed) continue;
+      const points = await db.collection("rides").doc(rideId).collection("points")
+        .where("time", ">=", new Date(due - 20 * 60_000).toISOString()).orderBy("time").get();
+      for (const p of points.docs) {
+        if (metres(stopLat, stopLon, p.data().lat, p.data().lon) <= PASSED) {
+          riderPassed = { busId: r.data().busId, time: p.data().time };
+          break;
+        }
+      }
+    }
+  }
+
   const atStop = demo === true || (typeof metresFromStop === "number" && metresFromStop <= AT_STOP);
   const time = (seconds: number) => new Date(seconds * 1000).toLocaleTimeString("en-IE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Dublin" });
   let verdict = "";
   let reason = "";
-  if (closest && closest.m <= PASSED) {
+  if (riderPassed) {
+    verdict = "came";
+    reason = `A ghost bus rider was on bus ${riderPassed.busId}: their phone passed this stop at ${time(Date.parse(riderPassed.time) / 1000)}.`;
+  } else if (closest && closest.m <= PASSED) {
     verdict = "came";
     reason = `Bus ${closest.bus.id} passed this stop at ${time(closest.bus.sentAt)}.`;
   } else if (wentPast) {

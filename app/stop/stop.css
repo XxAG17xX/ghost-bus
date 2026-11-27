@@ -331,3 +331,8 @@ a.phone-tab:focus-visible {
   outline: 3px solid var(--stamp);
   outline-offset: 2px;
 }
+
+/* a rider on the bus: the strongest line on the board */
+.check.rider {
+  font-weight: 700;
+}

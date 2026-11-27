@@ -37,6 +37,14 @@ export async function GET(request: NextRequest) {
   const now = Date.now();
   const routesHere = new Set(stopRoutes[stopId]);
 
+  // riders on buses right now (seen in the last 2 minutes), by the nta bus they're on
+  const riderDocs = await db.collection("live_riders").where("at", ">", now - 2 * 60_000).get();
+  const riders = new Map<string, { lat: number; lon: number; at: number }>();
+  for (const d of riderDocs.docs) {
+    const r = d.data();
+    if (r.mode === "bus" && r.busId) riders.set(r.busId, { lat: r.lat, lon: r.lon, at: r.at });
+  }
+
   const rows = [];
   for (const trip of trips) {
     if (!routesHere.has(trip.routeId)) continue;
@@ -72,17 +80,28 @@ export async function GET(request: NextRequest) {
     else if (!bus && started) flag = "no bus";
     else if (bus && fetchedAt / 1000 - bus.sentAt > FROZEN_SECONDS) flag = "frozen";
 
-    // did the bus already go past this stop? compare both along the bus's own route line
+    // did the bus already go past this stop? compare both along the bus's own route line.
+    // if a rider is on this bus, their phone says where it really is, so that's used instead of the nta
     let passed = false;
+    let rider = null;
     if (bus) {
       const line = (await file<RouteFile>(origin, `r/${encodeURIComponent(bus.routeId.replaceAll("/", "~").replaceAll(" ", "_"))}.json`))?.directions[String(bus.direction)]?.shape;
+      const onBoard = riders.get(bus.id);
       if (line) {
         const stopOnLine = snap(line, stopLat, stopLon);
         passed = stopOnLine.off < 100 && snap(line, bus.lat, bus.lon).along > stopOnLine.along + 50;
+        if (onBoard) {
+          rider = {
+            metres: Math.round(metres(stopLat, stopLon, onBoard.lat, onBoard.lon)),
+            age: Math.round((now - onBoard.at) / 1000),
+            passed: stopOnLine.off < 100 && snap(line, onBoard.lat, onBoard.lon).along > stopOnLine.along + 50,
+          };
+        }
       }
     }
 
     rows.push({
+      rider: rider,
       direction: trip.direction,
       passed: passed,
       tripId: trip.tripId,

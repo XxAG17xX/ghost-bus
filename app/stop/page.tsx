@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import "./stop.css";
 
-type Row = { direction: number | null; passed: boolean; tripId: string; startDate: string; route: string; to: string; due: number; vehicle: string | null; age: number | null; metres: number | null; flag: string };
+type Row = { rider: { metres: number; age: number; passed: boolean } | null; direction: number | null; passed: boolean; tripId: string; startDate: string; route: string; to: string; due: number; vehicle: string | null; age: number | null; metres: number | null; flag: string };
 type Board = { stop: { id: string; name: string; lat: number; lon: number }; tripsAt: number; rows: Row[] };
 type Verdict = { verdict: string; reason: string; witnesses: number };
 
@@ -201,7 +201,7 @@ export default function StopPage() {
                     {verdicts[row.tripId].witnesses > 1 && <p className="small-print">{verdicts[row.tripId].witnesses} people reported this trip here.</p>}
                   </div>
                 ) : (
-                  <div className={`check ${row.flag ? "bad" : row.vehicle ? "ok" : ""}`}>
+                  <div className={`check ${row.rider ? "ok rider" : row.flag ? "bad" : row.vehicle ? "ok" : ""}`}>
                     <p>{check(row)}</p>
                     {row.due < now - 2 * 60_000 && (
                       <button className="didnt-come" onClick={() => report(row)} disabled={reporting === row.tripId}>
@@ -235,6 +235,8 @@ function sessionId() {
 
 // what ghost bus types under a board line
 function check(row: Row) {
+  if (row.rider?.passed) return "A ghost bus rider on this bus already went past this stop.";
+  if (row.rider) return `A ghost bus rider is on this bus: ${away(row.rider.metres)} away, ${row.rider.age} s ago.`;
   if (row.flag === "cancelled") return "The NTA has cancelled this trip, but it's still listed.";
   if (row.flag === "no bus") return "No bus is running this trip right now.";
   if (row.passed && row.flag === "frozen") return `Bus ${row.vehicle} was already past this stop ${Math.round(row.age! / 60)} min ago.`;

@@ -149,10 +149,14 @@ export default function Recorder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ntaBuses]);
 
-  // while recording, once a minute: "a rider is here", so the projector shows riders.
-  // the last fix is already going to the cloud for the ride, this just adds it to the live count
+  // while recording, every 15 s: "a rider is here, on this bus". people waiting at a stop then see
+  // where the bus really is, and the projector shows riders. the fix is already going to the cloud for the ride
   const lastFix = useRef<Fix | undefined>(undefined);
   lastFix.current = fixes.at(-1);
+  const busNow = useRef<string | null>(null);
+  busNow.current = myBus?.id ?? null;
+  const rideNow = useRef<string | null>(null);
+  rideNow.current = rideId;
   useEffect(() => {
     if (!recording) return;
     let id = sessionStorage.getItem("ghost-bus-id");
@@ -163,10 +167,10 @@ export default function Recorder() {
     const say = () => {
       const f = lastFix.current;
       if (!f) return;
-      fetch("/api/here", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, lat: f.lat, lon: f.lon, mode: "bus" }) }).catch(() => {});
+      fetch("/api/here", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, lat: f.lat, lon: f.lon, mode: "bus", busId: busNow.current, rideId: rideNow.current }) }).catch(() => {});
     };
     const first = setTimeout(say, 5_000);
-    const timer = setInterval(say, 60_000);
+    const timer = setInterval(say, 15_000);
     return () => {
       clearTimeout(first);
       clearInterval(timer);
