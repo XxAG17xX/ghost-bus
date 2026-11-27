@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import "./stop.css";
 
-type Row = { passed: boolean; tripId: string; startDate: string; route: string; to: string; due: number; vehicle: string | null; age: number | null; metres: number | null; flag: string };
+type Row = { direction: number | null; passed: boolean; tripId: string; startDate: string; route: string; to: string; due: number; vehicle: string | null; age: number | null; metres: number | null; flag: string };
 type Board = { stop: { id: string; name: string; lat: number; lon: number }; tripsAt: number; rows: Row[] };
 type Verdict = { verdict: string; reason: string; witnesses: number };
 
@@ -24,6 +24,7 @@ export default function StopPage() {
   const [demo, setDemo] = useState(false); // demo stop (?demo=1): counted as at the stop, for the classroom
   const [verdicts, setVerdicts] = useState<Record<string, Verdict>>({}); // trip id -> the verdict
   const [reporting, setReporting] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   // a stop in the link (?stop=...) opens straight away, so a qr code can send people to one stop
   useEffect(() => {
@@ -88,6 +89,26 @@ export default function StopPage() {
     );
   }
 
+  // typing a stop name or its number (the number on the pole, like 404) instead of using the location
+  async function searchStops(text: string) {
+    setSearch(text);
+    const wanted = text.trim().toLowerCase();
+    if (wanted.length < 2) {
+      setNearby([]);
+      return;
+    }
+    const stops: Record<string, [string, number, number]> = await (await fetch("/gtfs/stops.json")).json();
+    const busStops: Record<string, string[]> = await (await fetch("/gtfs/stop_routes.json")).json();
+    const found: Nearby[] = [];
+    for (const id in busStops) {
+      if (!stops[id]) continue;
+      const number = id.slice(-6).replace(/^0+/, "");
+      if (stops[id][0].toLowerCase().includes(wanted) || number === wanted) found.push({ id, name: `${stops[id][0]} · ${number}`, metres: -1 });
+      if (found.length === 8) break;
+    }
+    setNearby(found);
+  }
+
   function choose(id: string, metres: number | null) {
     setDistance(metres);
     setBoard(null);
@@ -114,7 +135,7 @@ export default function StopPage() {
     const response = await fetch("/api/report", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ stop: stopId, tripId: row.tripId, startDate: row.startDate, route: row.route, due: row.due, metresFromStop, demo, cancelled: row.flag === "cancelled" }),
+      body: JSON.stringify({ stop: stopId, tripId: row.tripId, startDate: row.startDate, route: row.route, due: row.due, metresFromStop, demo, cancelled: row.flag === "cancelled", direction: row.direction }),
     });
     if (response.ok) {
       const answer = await response.json();
@@ -137,10 +158,17 @@ export default function StopPage() {
               {finding ? "Finding your stop…" : "Find my stop"}
             </button>
             <p className="small-print">Your location stays on this phone. It&apos;s only used to find the nearest stop.</p>
+            <input
+              className="stop-search"
+              value={search}
+              onChange={(e) => searchStops(e.target.value)}
+              placeholder="or type a stop name or number"
+              aria-label="Stop name or number"
+            />
             {nearby.map((stop) => (
-              <button key={stop.id} className="stop-choice" onClick={() => choose(stop.id, stop.metres)}>
+              <button key={stop.id} className="stop-choice" onClick={() => choose(stop.id, stop.metres < 0 ? null : stop.metres)}>
                 <span>{stop.name}</span>
-                <span>{Math.round(stop.metres)} m</span>
+                {stop.metres >= 0 && <span>{Math.round(stop.metres)} m</span>}
               </button>
             ))}
           </>

@@ -52,7 +52,7 @@ export default function CityMap({ buses, frozen, riders }: { buses: [number, num
       style: STYLE,
       center: [-6.27, 53.345],
       zoom: 10.7,
-      interactive: false, // it's on a projector
+      // i drive it from my laptop in the demo, so it can be dragged and zoomed
       attributionControl: { compact: true },
     });
     map.on("load", () => {

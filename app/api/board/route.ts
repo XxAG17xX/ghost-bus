@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
     rows.push({
+      direction: trip.direction,
       passed: passed,
       tripId: trip.tripId,
       startDate: trip.startDate,

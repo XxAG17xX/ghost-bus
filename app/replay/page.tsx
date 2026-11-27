@@ -127,7 +127,7 @@ export default function ReplayPage() {
         </section>
 
         <div className="source">
-          <p>My own GPS (first and last minute cut) and the NTA GTFS-Realtime positions saved during the ride.</p>
+          <p>My own GPS and the NTA GTFS-Realtime positions saved during the ride.</p>
           <p className="scene-tabs">
             <Link href="/live">Back to the city</Link>
           </p>

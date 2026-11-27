@@ -29,9 +29,15 @@ export async function POST(request: NextRequest) {
   const now = Date.now();
   const copies = await db.collection("nta_feed").where("fetchedAt", ">=", new Date(due - 20 * 60_000)).orderBy("fetchedAt").get();
   const seen: { bus: Bus; at: number }[] = [];
+  let another: Bus | null = null; // a different bus of the same route and direction that passed the stop
   for (const doc of copies.docs) {
-    const bus = (doc.data().vehicles as Bus[]).find((v) => v.tripId === tripId);
+    const vehicles = doc.data().vehicles as Bus[];
+    const bus = vehicles.find((v) => v.tripId === tripId);
     if (bus) seen.push({ bus, at: doc.data().fetchedAt.toMillis() });
+    for (const v of vehicles) {
+      if (another || v.tripId === tripId || v.route !== route || v.direction !== body.direction) continue;
+      if (v.sentAt * 1000 > due - 10 * 60_000 && metres(stopLat, stopLon, v.lat, v.lon) <= PASSED) another = v;
+    }
   }
 
   // did it pass the stop? the closest it got, and when
@@ -83,6 +89,9 @@ export async function POST(request: NextRequest) {
       verdict = "late";
       reason = `Bus ${latest.bus.id} is running this trip, ${away < 1000 ? `${away} m` : `${(away / 1000).toFixed(1)} km`} away.`;
     }
+  } else if (another) {
+    verdict = "came";
+    reason = `No bus ran this trip, but another ${route} (bus ${another.id}) passed this stop at ${time(another.sentAt)}.`;
   } else if (atStop) {
     verdict = "ghost";
     reason = `${body.cancelled ? "The NTA cancelled this trip, but the board kept it. " : ""}No bus ran this trip in the last ${Math.round((now - due) / 60_000) + 20} minutes, while the board kept showing it.`;

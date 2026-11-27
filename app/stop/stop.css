@@ -309,3 +309,25 @@ a.phone-tab:focus-visible {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* typing a stop instead of using the location */
+.stop-search {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  font-family: var(--font-typed), monospace;
+  font-size: 16px;
+  color: var(--ink);
+}
+.stop-search::placeholder {
+  color: var(--ink-soft);
+}
+.stop-search:focus-visible {
+  outline: 3px solid var(--stamp);
+  outline-offset: 2px;
+}

@@ -3,7 +3,7 @@ import { Fix, whichBus } from "../../analysis";
 import { Bus, database } from "../../nta";
 
 // /api/replay?ride=<id>: everything the projector needs to play one real ride back:
-// my gps trace (first and last minute cut, like the analysis) and every nta position of the bus i was on
+// my whole gps trace and every nta position of the bus i was on
 
 export async function GET(request: NextRequest) {
   const rideId = request.nextUrl.searchParams.get("ride") ?? "";
@@ -13,9 +13,7 @@ export async function GET(request: NextRequest) {
   const route = String(ride.data()!.route);
 
   const all = (await ride.ref.collection("points").orderBy("time").get()).docs.map((p) => p.data() as Fix);
-  const first = Date.parse(all[0].time);
-  const last = Date.parse(all[all.length - 1].time);
-  const fixes = all.filter((f) => Date.parse(f.time) > first + 60_000 && Date.parse(f.time) < last - 60_000);
+  const fixes = all;
   const start = Date.parse(fixes[0].time);
   const end = Date.parse(fixes[fixes.length - 1].time);
 
